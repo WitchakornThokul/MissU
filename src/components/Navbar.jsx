@@ -1,4 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { MissUNavLogo } from './MissULogo';
 import { FiLogOut } from 'react-icons/fi';
@@ -7,16 +10,29 @@ export default function Navbar() {
   const { currentUser, userProfile, logout, incomingRequests, isLocal } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [friendReqCount, setFriendReqCount] = useState(0);
 
   async function handleLogout() { await logout(); navigate('/'); }
 
   const active = location.pathname;
   const pendingCount = isLocal ? 0 : incomingRequests.length;
 
+  useEffect(() => {
+    if (!currentUser || isLocal) return;
+    const q = query(
+      collection(db, 'friendRequests'),
+      where('toUid', '==', currentUser.uid),
+      where('status', '==', 'pending')
+    );
+    return onSnapshot(q, snap => setFriendReqCount(snap.size));
+  }, [currentUser, isLocal]);
+
   const NAV_LINKS = [
     { to: '/dashboard',    label: 'หน้าหลัก' },
+    { to: '/feed',         label: 'ฟีด' },
     { to: '/chat',         label: 'แชท' },
     { to: '/find-partner', label: 'คู่รัก', badge: pendingCount },
+    { to: '/people',       label: 'คนรู้จัก', badge: friendReqCount },
     { to: '/profile',      label: 'โปรไฟล์' },
   ];
 
