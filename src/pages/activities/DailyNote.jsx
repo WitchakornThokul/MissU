@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../../components/Navbar';
 import PageHeader from '../../components/PageHeader';
+import { collection, setDoc, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
-const LS_KEY = 'missu_dailynotes';
 const MOODS = [
   { emoji:'😍', label:'รักมาก',      bg:'#fff1f3', accent:'#f43f5e' },
   { emoji:'🥰', label:'หวานใจ',      bg:'#fdf4ff', accent:'#a855f7' },
@@ -14,30 +15,40 @@ const MOODS = [
 ];
 
 export default function DailyNote() {
-  const { currentUser, userProfile, isLocal } = useAuth();
+  const { currentUser, userProfile } = useAuth();
+  const coupleId = currentUser && userProfile?.partnerId
+    ? [currentUser.uid, userProfile.partnerId].sort().join('_') : null;
   const today = new Date().toISOString().split('T')[0];
+
   const [notes, setNotes] = useState([]);
   const [mood, setMood] = useState(null);
   const [message, setMessage] = useState('');
   const [todayNote, setTodayNote] = useState(null);
-  const key = isLocal ? LS_KEY : `${LS_KEY}_${currentUser?.uid}`;
 
-  useEffect(()=>{
-    const stored=JSON.parse(localStorage.getItem(key)||'[]');
-    setNotes(stored);
-    setTodayNote(stored.find(n=>n.date===today)||null);
-  },[]);
+  useEffect(() => {
+    if (!coupleId) return;
+    const q = query(collection(db, 'couples', coupleId, 'dailyNotes'), orderBy('date', 'desc'));
+    return onSnapshot(q, snap => {
+      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setNotes(all);
+      setTodayNote(all.find(n => n.date === today && n.authorId === currentUser.uid) || null);
+    });
+  }, [coupleId]);
 
-  function saveNote(e){
-    e.preventDefault(); if(!mood)return;
-    const stored=JSON.parse(localStorage.getItem(key)||'[]').filter(n=>n.date!==today);
-    const newNote={date:today,mood,message,author:userProfile?.displayName,emoji:userProfile?.avatarEmoji||'💕',id:today};
-    stored.unshift(newNote);
-    localStorage.setItem(key,JSON.stringify(stored));
-    setNotes(stored); setTodayNote(newNote);
+  async function saveNote(e) {
+    e.preventDefault();
+    if (!mood || !coupleId) return;
+    const docId = `${currentUser.uid}_${today}`;
+    await setDoc(doc(db, 'couples', coupleId, 'dailyNotes', docId), {
+      date: today, mood, message,
+      author: userProfile?.displayName,
+      authorId: currentUser.uid,
+      emoji: userProfile?.avatarEmoji || '💕',
+    });
   }
 
-  const pastNotes = notes.filter(n=>n.date!==today);
+  const myPastNotes = notes.filter(n => n.authorId === currentUser.uid && n.date !== today);
+  const partnerTodayNote = notes.find(n => n.authorId !== currentUser.uid && n.date === today);
 
   return (
     <div className="min-h-screen" style={{background:'linear-gradient(160deg,#fefce8,#fff7ed,#fff1f3)'}}>
@@ -45,6 +56,7 @@ export default function DailyNote() {
       <PageHeader emoji="💝" title="โน้ตรายวัน" subtitle="บอกความรู้สึกทุกวัน" grad="from-yellow-400 to-orange-500" />
 
       <div className="max-w-lg mx-auto px-4 -mt-6 pb-10">
+        {/* My today note */}
         <div className="card-love p-6 mb-5 shadow-xl">
           <div className="flex items-center justify-between mb-5">
             <h3 className="font-bold text-gray-700 flex items-center gap-2">
@@ -81,7 +93,7 @@ export default function DailyNote() {
               </button>
             </form>
           ) : (
-            <div className="rounded-2xl p-5 text-center transition-all"
+            <div className="rounded-2xl p-5 text-center"
               style={{background:todayNote.mood?.bg||'#fff1f3', border:`2px solid ${todayNote.mood?.accent||'#f43f5e'}30`}}>
               <div className="text-5xl mb-2 animate-pulse-soft">{todayNote.mood?.emoji}</div>
               <p className="font-display font-semibold text-xl" style={{color:todayNote.mood?.accent||'#f43f5e'}}>
@@ -97,13 +109,27 @@ export default function DailyNote() {
           )}
         </div>
 
-        {pastNotes.length > 0 && (
+        {/* Partner's today note */}
+        {partnerTodayNote && (
+          <div className="card-love p-5 mb-5">
+            <p className="text-xs font-bold text-gray-400 mb-3">💌 {partnerTodayNote.author} วันนี้รู้สึก...</p>
+            <div className="rounded-2xl p-4 text-center"
+              style={{background:partnerTodayNote.mood?.bg||'#fff1f3', border:`2px solid ${partnerTodayNote.mood?.accent||'#f43f5e'}30`}}>
+              <div className="text-4xl mb-1">{partnerTodayNote.mood?.emoji}</div>
+              <p className="font-semibold" style={{color:partnerTodayNote.mood?.accent||'#f43f5e'}}>{partnerTodayNote.mood?.label}</p>
+              {partnerTodayNote.message && <p className="text-gray-500 text-xs mt-2 font-display italic">"{partnerTodayNote.message}"</p>}
+            </div>
+          </div>
+        )}
+
+        {/* My past notes */}
+        {myPastNotes.length > 0 && (
           <div>
             <h3 className="font-bold text-gray-600 mb-3 px-1 flex items-center gap-2">
               <span>📖</span> ย้อนดูความรู้สึก
             </h3>
             <div className="space-y-3">
-              {pastNotes.slice(0,10).map(n=>(
+              {myPastNotes.slice(0,10).map(n=>(
                 <div key={n.id} className="bg-white rounded-2xl p-4 flex items-center gap-3"
                   style={{border:'1px solid rgba(251,146,60,0.15)', boxShadow:'0 2px 8px rgba(0,0,0,0.04)'}}>
                   <span className="text-3xl">{n.mood?.emoji}</span>
