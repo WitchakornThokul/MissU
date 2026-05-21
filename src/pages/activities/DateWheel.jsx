@@ -1,24 +1,26 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Navbar from '../../components/Navbar';
-import { Link } from 'react-router-dom';
+import PageHeader from '../../components/PageHeader';
 
 const DATE_IDEAS = [
-  { emoji: '🍣', idea: 'ไปทานซูชิด้วยกัน', detail: 'หาร้านซูชิแสนอร่อย นั่งคุยกันชิวๆ' },
-  { emoji: '🎬', idea: 'ดูหนังในโรงภาพยนตร์', detail: 'เลือกหนังที่ทั้งคู่อยากดู แล้วไปนั่งดูพร้อมกัน' },
-  { emoji: '🌅', idea: 'ดูพระอาทิตย์ตก', detail: 'ไปหาจุดชมวิวสวยๆ แล้วดูพระอาทิตย์ตกด้วยกัน' },
-  { emoji: '🍳', idea: 'ทำอาหารที่บ้าน', detail: 'เลือกเมนูพิเศษ แล้วลงมือทำด้วยกัน' },
-  { emoji: '🎡', idea: 'ไปสวนสนุก', detail: 'ขึ้นเครื่องเล่น กินของว่าง สนุกสุดๆ' },
-  { emoji: '🌳', idea: 'ปิกนิกในสวน', detail: 'เตรียมผ้าปูพื้นและอาหาร ไปนั่งเล่นในสวนสาธารณะ' },
-  { emoji: '🎭', idea: 'ดูการแสดง', detail: 'หาคอนเสิร์ต ละคร หรือการแสดงสดที่น่าสนใจ' },
-  { emoji: '🏖️', idea: 'ไปทะเล', detail: 'นั่งฟังเสียงคลื่น เดินเล่นริมหาด ถ่ายรูปสวยๆ' },
-  { emoji: '🎨', idea: 'คลาสวาดรูปด้วยกัน', detail: 'ลงทะเบียนคลาสวาดรูป แล้วสร้างงานศิลปะด้วยกัน' },
-  { emoji: '🌙', idea: 'ดูดาวตอนกลางคืน', detail: 'ไปที่ที่มืดและเงียบสงบ นอนดูดาวด้วยกัน' },
-  { emoji: '☕', idea: 'คาเฟ่โฮป', detail: 'เดินเข้าคาเฟ่สวยๆ หลายเจ้าในวันเดียว' },
-  { emoji: '🎮', idea: 'เล่นเกมด้วยกัน', detail: 'เลือกเกมที่เล่นสองคนได้ แล้วแข่งกันสนุกๆ' },
-  { emoji: '🚲', idea: 'ขี่จักรยาน', detail: 'หาเส้นทางสวยๆ แล้วปั่นจักรยานชมวิว' },
-  { emoji: '🍦', idea: 'ล่าไอศกรีม', detail: 'หาร้านไอศกรีมอร่อยๆ หรือทำไอศกรีมเองที่บ้าน' },
-  { emoji: '📚', idea: 'อ่านหนังสือด้วยกัน', detail: 'ไปร้านหนังสือ เลือกเล่มที่ชอบ แล้วนั่งอ่านด้วยกัน' },
-  { emoji: '🏊', idea: 'ว่ายน้ำด้วยกัน', detail: 'ไปสระว่ายน้ำหรือน้ำตก เล่นน้ำและผ่อนคลาย' },
+  { emoji:'🍣', idea:'ซูชิเดท',         detail:'หาร้านซูชิแสนอร่อย นั่งคุยกันชิวๆ' },
+  { emoji:'🎬', idea:'ดูหนังในโรง',      detail:'เลือกหนังที่ทั้งคู่อยากดูด้วยกัน' },
+  { emoji:'🌅', idea:'ดูพระอาทิตย์ตก',  detail:'ไปจุดชมวิวสวยๆ ด้วยกัน' },
+  { emoji:'🍳', idea:'ทำอาหารที่บ้าน',  detail:'เลือกเมนูพิเศษ ทำร่วมกัน' },
+  { emoji:'🎡', idea:'ไปสวนสนุก',        detail:'ขึ้นเครื่องเล่น กินของว่าง สนุกๆ' },
+  { emoji:'🌳', idea:'ปิกนิกในสวน',      detail:'เตรียมผ้าปูพื้นและอาหาร' },
+  { emoji:'🎭', idea:'ดูการแสดง',         detail:'คอนเสิร์ต ละคร หรือการแสดงสด' },
+  { emoji:'🏖️', idea:'ไปทะเล',           detail:'เดินเล่นริมหาด ถ่ายรูปสวยๆ' },
+  { emoji:'🎨', idea:'คลาสวาดรูป',       detail:'สร้างงานศิลปะด้วยกัน' },
+  { emoji:'🌙', idea:'ดูดาว',             detail:'ไปที่มืดและเงียบ นอนดูดาว' },
+  { emoji:'☕', idea:'คาเฟ่โฮป',          detail:'เดินเข้าคาเฟ่สวยๆ หลายเจ้า' },
+  { emoji:'🚲', idea:'ขี่จักรยาน',        detail:'ปั่นจักรยานชมวิวสวยๆ' },
+];
+
+const SEGMENT_COLORS = [
+  '#f43f5e','#ec4899','#a855f7','#6366f1',
+  '#3b82f6','#14b8a6','#f97316','#f59e0b',
+  '#ef4444','#8b5cf6','#06b6d4','#10b981',
 ];
 
 export default function DateWheel() {
@@ -26,67 +28,91 @@ export default function DateWheel() {
   const [result, setResult] = useState(null);
   const [rotation, setRotation] = useState(0);
   const [history, setHistory] = useState([]);
+  const n = DATE_IDEAS.length;
+  const seg = 360 / n;
 
-  function spin() {
-    if (spinning) return;
-    setSpinning(true);
-    setResult(null);
-    const extra = 720 + Math.random() * 720;
+  function spin(){
+    if(spinning)return;
+    setSpinning(true); setResult(null);
+    const extra = 1440 + Math.random()*1080;
     const newRot = rotation + extra;
     setRotation(newRot);
-    const index = Math.floor(((360 - (newRot % 360)) / 360) * DATE_IDEAS.length) % DATE_IDEAS.length;
-    setTimeout(() => {
-      const picked = DATE_IDEAS[index];
+    setTimeout(()=>{
+      const idx = Math.floor(((360-(newRot%360))/360)*n)%n;
+      const picked = DATE_IDEAS[idx];
       setResult(picked);
-      setHistory(h => [picked, ...h].slice(0, 5));
+      setHistory(h=>[picked,...h].slice(0,4));
       setSpinning(false);
-    }, 2500);
+      localStorage.setItem('missu_date_spun', String((parseInt(localStorage.getItem('missu_date_spun')||'0')+1)));
+    }, 3000);
   }
 
-  const segmentAngle = 360 / DATE_IDEAS.length;
+  // Build conic gradient
+  const conicStr = SEGMENT_COLORS.map((c,i)=>`${c} ${i*seg}deg ${(i+1)*seg}deg`).join(',');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-orange-50">
+    <div className="min-h-screen" style={{background:'linear-gradient(160deg,#fff1f3,#fce7f3,#f3e8ff)'}}>
       <Navbar />
-      <div className="max-w-lg mx-auto p-4 pt-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Link to="/dashboard" className="text-rose-400 hover:text-rose-500 text-sm">← กลับ</Link>
-          <h1 className="text-2xl font-bold text-gray-700">🎲 วงล้อเดท</h1>
-        </div>
-        <div className="bg-white rounded-3xl shadow-lg p-6 text-center mb-6">
-          <p className="text-gray-500 text-sm mb-6">สปินเพื่อรับไอเดียเดทสุดพิเศษ!</p>
+      <PageHeader emoji="🎲" title="วงล้อเดท" subtitle="สปินเพื่อรับไอเดียเดทสุดพิเศษ!" grad="from-pink-400 to-rose-500" />
+
+      <div className="max-w-lg mx-auto px-4 -mt-6 pb-10">
+        <div className="card-love p-6 text-center mb-5 shadow-xl">
+          {/* Wheel */}
           <div className="relative inline-block mb-6">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-10 text-2xl">🔻</div>
-            <div
-              className="w-64 h-64 rounded-full border-4 border-white shadow-xl transition-transform"
-              style={{ transition: spinning ? 'transform 2.5s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none', transform: `rotate(${rotation}deg)`, background: `conic-gradient(${DATE_IDEAS.map((d, i) => `${['#fda4af','#f9a8d4','#d8b4fe','#93c5fd','#6ee7b7','#fcd34d','#fb923c','#f87171'][i % 8]} ${i * segmentAngle}deg ${(i + 1) * segmentAngle}deg`).join(',')})` }}
-            >
+            {/* Pointer */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20 text-3xl drop-shadow-lg">🔻</div>
+            <div className="relative w-64 h-64 mx-auto">
+              <div className="w-full h-full rounded-full border-4 border-white shadow-2xl"
+                style={{
+                  background:`conic-gradient(${conicStr})`,
+                  transform:`rotate(${rotation}deg)`,
+                  transition: spinning ? 'transform 3s cubic-bezier(0.17,0.67,0.12,0.99)' : 'none',
+                }}>
+                {/* Emoji labels on wheel */}
+                {DATE_IDEAS.map((d,i)=>{
+                  const angle = i*seg + seg/2;
+                  const rad = (angle-90)*Math.PI/180;
+                  const r = 90;
+                  const x = 128 + r*Math.cos(rad);
+                  const y = 128 + r*Math.sin(rad);
+                  return (
+                    <div key={i} className="absolute text-lg pointer-events-none"
+                      style={{left:x,top:y,transform:'translate(-50%,-50%)'}}>
+                      {d.emoji}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Center hub */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white rounded-full w-12 h-12 shadow-inner flex items-center justify-center text-xl">
-                  💕
-                </div>
+                <div className="w-14 h-14 rounded-full bg-white shadow-xl flex items-center justify-center text-2xl">💕</div>
               </div>
             </div>
           </div>
+
           <button onClick={spin} disabled={spinning}
-            className={`px-8 py-3 rounded-2xl font-bold text-white text-lg transition-all shadow-lg ${spinning ? 'bg-gray-300' : 'bg-rose-400 hover:bg-rose-500 hover:scale-105'}`}>
-            {spinning ? 'กำลังสปิน...' : '🎲 สปิน!'}
+            className={`btn-love px-10 py-4 text-lg ${spinning?'opacity-60':''}`}>
+            {spinning ? '🎲 กำลังสปิน...' : '🎲 สปิน!'}
           </button>
         </div>
+
         {result && (
-          <div className="bg-white rounded-3xl shadow-lg p-6 text-center mb-6 border-2 border-rose-200">
-            <div className="text-5xl mb-3">{result.emoji}</div>
-            <h3 className="text-xl font-bold text-gray-700 mb-2">{result.idea}</h3>
-            <p className="text-gray-500 text-sm">{result.detail}</p>
+          <div className="card-love p-6 text-center animate-fade-up shadow-xl mb-5"
+            style={{borderTop:'4px solid #f43f5e'}}>
+            <div className="text-5xl mb-3 animate-bounce-gentle">{result.emoji}</div>
+            <h3 className="font-display text-2xl font-bold text-gray-800 mb-2">{result.idea}</h3>
+            <p className="text-gray-500">{result.detail}</p>
           </div>
         )}
+
         {history.length > 1 && (
-          <div className="bg-white rounded-2xl shadow p-4">
-            <p className="text-sm font-medium text-gray-500 mb-3">ผลล่าสุด:</p>
+          <div className="card-love p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">ผลก่อนหน้า</p>
             <div className="space-y-2">
-              {history.slice(1).map((h, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-gray-500">
-                  <span>{h.emoji}</span><span>{h.idea}</span>
+              {history.slice(1).map((h,i)=>(
+                <div key={i} className="flex items-center gap-2 text-sm text-gray-500 py-1"
+                  style={{borderBottom:'1px solid #fce7f3'}}>
+                  <span className="text-xl">{h.emoji}</span><span>{h.idea}</span>
                 </div>
               ))}
             </div>
