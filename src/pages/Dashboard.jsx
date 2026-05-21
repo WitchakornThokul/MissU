@@ -187,7 +187,7 @@ export default function Dashboard() {
         <div className="absolute bottom-0 left-0 right-0 pointer-events-none"
           style={{height:32,background:'var(--bg)',clipPath:'ellipse(55% 100% at 50% 100%)'}}/>
 
-        <div className="max-w-2xl mx-auto relative z-10">
+        <div className="max-w-5xl mx-auto relative z-10">
           <div className="flex items-center justify-between gap-4">
             {/* User info */}
             <div className="flex items-center gap-3 min-w-0">
@@ -235,7 +235,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Content ── */}
-      <div className="max-w-2xl mx-auto px-4 -mt-5 pb-32 md:pb-12">
+      <div className="max-w-5xl mx-auto px-4 -mt-5 pb-32 md:pb-12">
 
         {/* Partner section */}
         <PartnerSection
