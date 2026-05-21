@@ -1,9 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import BottomNav from './components/BottomNav';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import Chat from './pages/Chat';
+import FindPartner from './pages/FindPartner';
 import LoveLetters from './pages/activities/LoveLetters';
 import Countdown from './pages/activities/Countdown';
 import BucketList from './pages/activities/BucketList';
@@ -12,7 +15,6 @@ import LoveQuiz from './pages/activities/LoveQuiz';
 import DateWheel from './pages/activities/DateWheel';
 import DailyNote from './pages/activities/DailyNote';
 import Achievements from './pages/activities/Achievements';
-import FindPartner from './pages/FindPartner';
 
 const ACTIVITY_MAP = {
   'love-letters': LoveLetters,
@@ -32,18 +34,27 @@ function ActivityWrapper() {
   return <Component />;
 }
 
+// BottomNav is shown globally for authenticated users on mobile
+function AuthenticatedBottomNav() {
+  const { currentUser } = useAuth();
+  if (!currentUser) return null;
+  return <BottomNav/>;
+}
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/dashboard"    element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/profile"      element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/chat"         element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/find-partner" element={<ProtectedRoute><FindPartner /></ProtectedRoute>} />
           <Route path="/activity/:id" element={<ProtectedRoute><ActivityWrapper /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
+        <AuthenticatedBottomNav/>
       </BrowserRouter>
     </AuthProvider>
   );
