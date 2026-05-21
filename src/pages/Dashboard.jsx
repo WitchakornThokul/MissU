@@ -122,7 +122,7 @@ export default function Dashboard() {
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-4 -mt-5 pb-10">
+      <div className="max-w-5xl mx-auto px-4 -mt-5 pb-28 md:pb-10">
 
         {/* Partner banner */}
         <PartnerBanner partnerProfile={partnerProfile} isLocal={isLocal}/>
