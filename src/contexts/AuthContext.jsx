@@ -198,7 +198,6 @@ export function AuthProvider({ children }) {
   async function acceptPartnerRequest(req) {
     await updateDoc(doc(db, 'partnerRequests', req.id), { status: 'accepted' });
     await updateDoc(doc(db, 'users', currentUser.uid), { partnerId: req.fromUid });
-    await updateDoc(doc(db, 'users', req.fromUid), { partnerId: currentUser.uid });
     setUserProfile(prev => ({ ...prev, partnerId: req.fromUid }));
     await loadPartnerProfile(req.fromUid);
   }
@@ -243,6 +242,22 @@ export function AuthProvider({ children }) {
     });
     return unsub;
   }, [currentUser, isLocal]);
+
+  // listen for outgoing requests that got accepted — then self-update partnerId
+  useEffect(() => {
+    if (!currentUser || isLocal || userProfile?.partnerId) return;
+    const q = query(
+      collection(db, 'partnerRequests'),
+      where('fromUid', '==', currentUser.uid),
+      where('status', '==', 'accepted')
+    );
+    const unsub = onSnapshot(q, async (snap) => {
+      if (snap.empty) return;
+      const req = snap.docs[0].data();
+      await updateDoc(doc(db, 'users', currentUser.uid), { partnerId: req.toUid });
+    });
+    return unsub;
+  }, [currentUser, isLocal, userProfile?.partnerId]);
 
   // bootstrap auth
   useEffect(() => {
