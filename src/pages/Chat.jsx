@@ -106,6 +106,8 @@ function NoPartner() {
   );
 }
 
+const MAX_MSG_LEN = 2000;
+
 /* ── Main Chat ── */
 export default function Chat() {
   const { currentUser, userProfile, partnerProfile } = useAuth();
@@ -148,7 +150,7 @@ export default function Chat() {
   /* Send text message */
   async function handleSend(e) {
     e?.preventDefault();
-    if (!text.trim() || !chatId || sending) return;
+    if (!text.trim() || !chatId || sending || text.length > MAX_MSG_LEN) return;
     setSending(true);
     try {
       await push(ref(rtdb, `chats/${chatId}/messages`), {
@@ -286,12 +288,16 @@ export default function Chat() {
         </button>
 
         {/* Text input */}
-        <div className="flex-1 flex items-end gap-2 rounded-2xl px-4 py-2"
-          style={{background:'#f1f5f7', border:'1.5px solid #e2eaee', minHeight: 44}}>
+        <div className="flex-1 flex flex-col rounded-2xl px-4 py-2"
+          style={{
+            background:'#f1f5f7',
+            border: text.length > MAX_MSG_LEN ? '1.5px solid #e8637a' : '1.5px solid #e2eaee',
+            minHeight: 44,
+          }}>
           <textarea
             ref={inputRef}
             value={text}
-            onChange={e => setText(e.target.value)}
+            onChange={e => setText(e.target.value.slice(0, MAX_MSG_LEN))}
             onKeyDown={handleKeyDown}
             placeholder="พิมพ์ข้อความ..."
             rows={1}
@@ -306,6 +312,12 @@ export default function Chat() {
               e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
             }}
           />
+          {text.length > MAX_MSG_LEN * 0.8 && (
+            <span className="text-right text-xs mt-0.5"
+              style={{color: text.length >= MAX_MSG_LEN ? '#e8637a' : '#94a3b8'}}>
+              {text.length}/{MAX_MSG_LEN}
+            </span>
+          )}
         </div>
 
         {/* Send */}
