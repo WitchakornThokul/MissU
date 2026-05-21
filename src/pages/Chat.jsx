@@ -163,18 +163,10 @@ export default function Chat() {
   /* ── Viewport / keyboard fix ── */
   useEffect(() => {
     const update = () => {
-      const h = window.visualViewport?.height || window.innerHeight;
-      document.documentElement.style.setProperty('--vh', `${h}px`);
-      requestAnimationFrame(() => endRef.current?.scrollIntoView());
+      requestAnimationFrame(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }));
     };
-    update();
     window.visualViewport?.addEventListener('resize', update);
-    window.addEventListener('resize', update);
-    return () => {
-      window.visualViewport?.removeEventListener('resize', update);
-      window.removeEventListener('resize', update);
-      document.documentElement.style.removeProperty('--vh');
-    };
+    return () => window.visualViewport?.removeEventListener('resize', update);
   }, []);
 
   /* ── Online presence ── */
@@ -322,15 +314,18 @@ export default function Chat() {
   });
 
   return (
-    <div style={{ height: 'var(--vh,100dvh)', display: 'flex', flexDirection: 'column', background: '#fff', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#fff', overflow: 'hidden' }}>
 
       {/* ── Header ── */}
       <div style={{
-        flexShrink: 0, height: 60,
-        display: 'flex', alignItems: 'center', gap: 12, padding: '0 16px',
+        flexShrink: 0,
+        minHeight: 60,
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '0 16px',
         paddingTop: 'env(safe-area-inset-top)',
         background: '#fff', borderBottom: '1px solid #f0f0f0',
         boxShadow: '0 1px 0 #f0f0f0',
+        zIndex: 10,
       }}>
         <Link to="/dashboard" style={{
           width: 36, height: 36, borderRadius: '50%',
@@ -372,7 +367,7 @@ export default function Chat() {
       </div>
 
       {/* ── Messages ── */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px 4px', overscrollBehavior: 'contain' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px 4px', overscrollBehavior: 'contain', minHeight: 0 }}>
         {loadingMsgs ? (
           <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 64 }}>
             <div className="w-7 h-7 border-2 border-rose-200 border-t-rose-400 rounded-full animate-spin-slow" />
@@ -409,10 +404,11 @@ export default function Chat() {
       <div style={{
         flexShrink: 0,
         padding: '8px 12px',
-        paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
         background: '#fff',
         borderTop: '1px solid #f0f0f0',
         display: 'flex', alignItems: 'flex-end', gap: 8,
+        zIndex: 10,
       }}>
         <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageChange} />
 

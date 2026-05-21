@@ -38,8 +38,8 @@ function ActivityWrapper() {
 function AuthenticatedBottomNav() {
   const { currentUser } = useAuth();
   const location = useLocation();
-  // Hide on chat page (it has its own full-screen layout)
-  if (!currentUser || location.pathname === '/chat') return null;
+  const hide = !currentUser || location.pathname === '/' || location.pathname === '/chat';
+  if (hide) return null;
   return <BottomNav/>;
 }
 
