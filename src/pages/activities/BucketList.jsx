@@ -2,21 +2,42 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../../components/Navbar';
 import PageHeader from '../../components/PageHeader';
+import { collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
-const LS_KEY = 'missu_bucketlist';
 const SUGGESTIONS = ['ดูพระอาทิตย์ตกด้วยกัน','ทำอาหารด้วยกัน','ดูหนังกลางแปลง','ไปเที่ยวทะเล','ปลูกต้นไม้ด้วยกัน','เรียนทำเบเกอรี่','ขี่จักรยานตอนเช้า','ถ่ายรูปคู่พิเศษ','ไปดูคอนเสิร์ต','ดูดาวตอนกลางคืน'];
 
 export default function BucketList() {
-  const { currentUser, isLocal } = useAuth();
+  const { currentUser, userProfile } = useAuth();
+  const coupleId = currentUser && userProfile?.partnerId
+    ? [currentUser.uid, userProfile.partnerId].sort().join('_') : null;
+
   const [items, setItems] = useState([]);
   const [text, setText] = useState('');
-  const key = isLocal ? LS_KEY : `${LS_KEY}_${currentUser?.uid}`;
 
-  useEffect(()=>{ setItems(JSON.parse(localStorage.getItem(key)||'[]')); },[]);
-  function save(list){ localStorage.setItem(key,JSON.stringify(list)); setItems(list); }
-  function addItem(t){ if(!t.trim())return; save([...items,{id:Date.now().toString(),text:t.trim(),done:false}]); setText(''); }
-  function toggle(id){ save(items.map(i=>i.id===id?{...i,done:!i.done}:i)); }
-  function remove(id){ save(items.filter(i=>i.id!==id)); }
+  useEffect(() => {
+    if (!coupleId) return;
+    const q = query(collection(db, 'couples', coupleId, 'bucketItems'), orderBy('createdAt', 'asc'));
+    return onSnapshot(q, snap => {
+      setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+  }, [coupleId]);
+
+  async function addItem(t) {
+    if (!t.trim() || !coupleId) return;
+    await addDoc(collection(db, 'couples', coupleId, 'bucketItems'), {
+      text: t.trim(), done: false, createdAt: serverTimestamp(),
+    });
+    setText('');
+  }
+
+  async function toggle(item) {
+    await updateDoc(doc(db, 'couples', coupleId, 'bucketItems', item.id), { done: !item.done });
+  }
+
+  async function remove(id) {
+    await deleteDoc(doc(db, 'couples', coupleId, 'bucketItems', id));
+  }
 
   const done = items.filter(i=>i.done).length;
   const pct = items.length ? (done/items.length)*100 : 0;
@@ -61,24 +82,24 @@ export default function BucketList() {
         </div>
 
         <div className="space-y-3">
-          {items.length===0 && (
+          {items.length === 0 && (
             <div className="text-center py-16 text-gray-300">
               <div className="text-6xl mb-3 opacity-40">🎯</div>
               <p className="font-display italic text-xl">เพิ่มความฝันของคุณทั้งคู่!</p>
             </div>
           )}
           {items.map(item=>(
-            <div key={item.id} className={`bg-white rounded-2xl px-5 py-4 flex items-center gap-3 transition-all`}
+            <div key={item.id} className="bg-white rounded-2xl px-5 py-4 flex items-center gap-3 transition-all"
               style={{border:'1px solid rgba(251,146,60,0.2)', opacity:item.done?0.7:1,
                 boxShadow:'0 2px 12px rgba(0,0,0,0.04)'}}>
-              <button onClick={()=>toggle(item.id)}
+              <button onClick={()=>toggle(item)}
                 className="w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all text-sm font-bold"
                 style={{
                   background:item.done?'linear-gradient(135deg,#22c55e,#16a34a)':'transparent',
                   borderColor:item.done?'transparent':'#fed7aa',
-                  color:'white'
+                  color:'white',
                 }}>
-                {item.done&&'✓'}
+                {item.done && '✓'}
               </button>
               <span className={`flex-1 font-medium ${item.done?'line-through text-gray-400':'text-gray-700'}`}>
                 {item.text}
