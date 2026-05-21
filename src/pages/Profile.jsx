@@ -156,12 +156,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Storage note */}
-        {!isLocal && (
-          <p className="text-center text-xs text-slate-300 px-4">
-            รูปโปรไฟล์เก็บใน Firebase Storage · ข้อมูลโปรไฟล์เก็บใน Firestore
-          </p>
-        )}
       </div>
     </div>
   );
