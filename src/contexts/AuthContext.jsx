@@ -15,8 +15,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 
-const IMGBB_KEY = import.meta.env.VITE_IMGBB_KEY;
-
+// Upload via API endpoint (Uploadcare)
 async function uploadToImgBB(file) {
   const base64 = await new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -24,13 +23,14 @@ async function uploadToImgBB(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-  const body = new FormData();
-  body.append('key', IMGBB_KEY);
-  body.append('image', base64);
-  const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body });
+  const res = await fetch('/api/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: base64 }),
+  });
   const json = await res.json();
-  if (!json.success) throw new Error(json.error?.message || 'Upload failed');
-  return json.data.url;
+  if (!res.ok) throw new Error(json.error || 'Upload failed');
+  return json.url;
 }
 
 const AuthContext = createContext();
