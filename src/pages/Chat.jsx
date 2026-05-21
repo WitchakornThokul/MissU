@@ -118,21 +118,15 @@ export default function Chat() {
   }, [currentUser, friends, userProfile?.partnerId]);
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg,#fdf4ff 0%,#f4eef8 100%)', paddingBottom: 90 }}>
+    <div className="min-h-screen" style={{ background: '#fafafa', paddingBottom: 80 }}>
       <Navbar />
 
       <div className="max-w-lg mx-auto px-4 py-5">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h1 className="font-bold text-slate-800" style={{ fontSize: '1.25rem' }}>ข้อความ</h1>
-            <p style={{ fontSize: '0.78rem', color: '#b0a8bc', marginTop: 1 }}>แชทกับคู่รักและเพื่อน</p>
-          </div>
-          <div className="w-9 h-9 rounded-2xl flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)' }}>
-            <FiMessageCircle size={16} color="white" />
-          </div>
+        <div className="flex items-center justify-between mb-4">
+          <h1 style={{ fontWeight: 800, fontSize: '1.3rem', color: '#111' }}>ข้อความ</h1>
+          <FiMessageCircle size={22} color="#111" strokeWidth={1.8} />
         </div>
 
         <div className="space-y-2.5">
@@ -145,13 +139,13 @@ export default function Chat() {
               </p>
               <Link to="/chat/partner"
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  background: 'white',
-                  borderRadius: 20,
-                  padding: '14px 16px',
-                  boxShadow: '0 2px 16px rgba(244,63,94,0.08)',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  background: '#fff',
+                  borderRadius: 16,
+                  padding: '12px 14px',
+                  boxShadow: 'none',
                   textDecoration: 'none',
-                  border: '1.5px solid rgba(244,63,94,0.08)',
+                  border: '1px solid #efefef',
                 }}>
                 {/* Avatar + online dot */}
                 <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -194,12 +188,13 @@ export default function Chat() {
                 return (
                   <Link key={friend.uid} to={`/messages/${friend.uid}`}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 14,
-                      background: 'white',
-                      borderRadius: 20,
-                      padding: '14px 16px',
-                      boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      background: '#fff',
+                      borderRadius: 16,
+                      padding: '12px 14px',
+                      boxShadow: 'none',
                       textDecoration: 'none',
+                      border: '1px solid #efefef',
                     }}>
                     <div style={{ position: 'relative', flexShrink: 0 }}>
                       <Avatar user={friend} size={54} />

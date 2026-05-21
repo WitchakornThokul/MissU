@@ -211,19 +211,17 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen" style={{background:'#fafafa'}}>
+    <div className="min-h-screen" style={{background:'#fafafa', paddingBottom: 80}}>
       <Navbar/>
 
       {/* Mobile-only sticky top bar */}
       <div
         className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-12"
         style={{
-          background:'rgba(255,255,255,0.97)',
-          backdropFilter:'blur(16px)',
-          WebkitBackdropFilter:'blur(16px)',
-          borderBottom:'1px solid #f0f0f0',
+          background:'#ffffff',
+          borderBottom:'1px solid #dbdbdb',
         }}>
-        <span className="font-display font-bold text-xl text-gradient">MissU</span>
+        <span style={{ fontWeight: 800, fontSize: '1.4rem', fontFamily: "'Nunito',sans-serif", color: '#111' }}>MissU</span>
         <Link to="/chat/partner"
           className="w-9 h-9 flex items-center justify-center rounded-full"
           style={{background:'#fff0f3'}}>
@@ -232,7 +230,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Main layout ── */}
-      <div className="max-w-6xl mx-auto px-5 pt-6 pb-36 md:pb-12 md:flex md:gap-8">
+      <div className="max-w-6xl mx-auto px-4 pt-5 pb-20 md:pb-12 md:flex md:gap-8">
 
         {/* Desktop sidebar */}
         <CoupleSidebar
@@ -249,9 +247,9 @@ export default function Dashboard() {
 
           {/* ── Mobile: couple header ── */}
           <div className="md:hidden">
-            {(hasPartner && (partnerProfile || isLocal)) ? (
-              <div className="rounded-3xl mb-5 overflow-hidden"
-                style={{boxShadow:'0 8px 32px rgba(232,99,122,0.18)'}}>
+            {hasPartner && (partnerProfile || isLocal) ? (
+              <div className="mb-4 overflow-hidden"
+                style={{ borderRadius: 20, border: '1px solid #efefef', background: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
                 {/* Gradient top section */}
                 <div className="relative px-5 pt-6 pb-6 text-center"
                   style={{background:'linear-gradient(135deg,#f43f5e,#c026d3,#7c3aed)'}}>
@@ -325,9 +323,9 @@ export default function Dashboard() {
           </div>
 
           {/* ── Mobile: story circles ── */}
-          <div className="md:hidden bg-white rounded-3xl p-5 mb-6"
-            style={{boxShadow:'0 4px 16px rgba(0,0,0,0.06)'}}>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-5 px-1">กิจกรรมของเรา</p>
+          <div className="md:hidden bg-white p-4 mb-4"
+            style={{ borderRadius: 16, border: '1px solid #efefef' }}>
+            <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#8e8e8e', letterSpacing: '0.06em', marginBottom: 14, paddingLeft: 4 }}>กิจกรรม</p>
             <div className="flex gap-6 overflow-x-auto pb-1 hide-scrollbar">
               {ACTIVITIES.map(a => <StoryCircle key={a.id} a={a} hasPartner={hasPartner}/>)}
             </div>

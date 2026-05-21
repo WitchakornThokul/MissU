@@ -13,10 +13,8 @@ export default function BottomNav() {
   const [friendReqCount, setFriendReqCount] = useState(0);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
 
-  const hasPartner = isLocal || !!userProfile?.partnerId;
   const pendingCount = isLocal ? 0 : incomingRequests.length;
 
-  // Listen to incoming friend requests
   useEffect(() => {
     if (!currentUser || isLocal) return;
     const q = query(
@@ -27,18 +25,15 @@ export default function BottomNav() {
     return onSnapshot(q, snap => setFriendReqCount(snap.size));
   }, [currentUser, isLocal]);
 
-  // Unread chat count
   useEffect(() => {
     if (!currentUser || isLocal) return;
     let unsubs = [];
     const msgMap = {};
-
     getFriends(currentUser.uid).then(friends => {
       const allIds = [
         ...(userProfile?.partnerId ? [[currentUser.uid, userProfile.partnerId].sort().join('_')] : []),
         ...friends.map(f => [currentUser.uid, f.uid].sort().join('_')),
       ];
-
       function recount() {
         let total = 0;
         allIds.forEach(id => {
@@ -49,7 +44,6 @@ export default function BottomNav() {
         });
         setUnreadChatCount(total);
       }
-
       unsubs = allIds.map(cid => {
         const q = rtdbQuery(ref(rtdb, `chats/${cid}/messages`), limitToLast(1));
         return onValue(q, snap => {
@@ -60,7 +54,6 @@ export default function BottomNav() {
         });
       });
     });
-
     return () => unsubs.forEach(u => u());
   }, [currentUser, isLocal, userProfile?.partnerId]);
 
@@ -77,42 +70,41 @@ export default function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-40 md:hidden"
       style={{
         background: '#ffffff',
-        borderTop: '1px solid #f0f0f0',
+        borderTop: '1px solid #dbdbdb',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}>
-      <div className="flex items-center justify-around px-2 py-2">
-        {TABS.map(({ to, label, Icon, badge, locked }) => {
+      <div style={{ display: 'flex', alignItems: 'center', height: 52 }}>
+        {TABS.map(({ to, label, Icon, badge }) => {
           const isActive = active === to;
-          const color = isActive ? '#e8637a' : locked ? '#d1d5db' : '#9ca3af';
+          const color = isActive ? '#111111' : '#8e8e8e';
           return (
             <Link
-              key={label}
-              to={locked ? '/find-partner' : to}
-              className="flex flex-col items-center gap-1 flex-1 py-2 px-1 transition-all active:scale-90">
-              <div className="relative">
-                {isActive && (
-                  <div style={{
-                    position: 'absolute', inset: -8,
-                    borderRadius: 16,
-                    background: 'linear-gradient(135deg,rgba(232,99,122,0.12),rgba(29,160,188,0.08))',
-                  }}/>
-                )}
+              key={to}
+              to={to}
+              style={{
+                flex: 1, height: '100%',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                gap: 3, textDecoration: 'none', position: 'relative',
+              }}>
+              <div style={{ position: 'relative' }}>
                 <Icon
-                  size={26}
+                  size={24}
                   strokeWidth={isActive ? 2.5 : 1.8}
                   color={color}
                 />
                 {badge > 0 && (
-                  <span
-                    className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full text-white flex items-center justify-center font-black"
-                    style={{fontSize:'0.55rem', background:'#e8637a'}}>
+                  <span style={{
+                    position: 'absolute', top: -4, right: -6,
+                    minWidth: 15, height: 15, borderRadius: 8,
+                    background: '#ed4956', color: 'white',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.5rem', fontWeight: 800, padding: '0 3px',
+                  }}>
                     {badge > 9 ? '9+' : badge}
                   </span>
                 )}
               </div>
-              <span
-                className="font-semibold leading-none"
-                style={{fontSize:'0.72rem', color}}>
+              <span style={{ fontSize: '0.6rem', fontWeight: isActive ? 700 : 500, color, lineHeight: 1 }}>
                 {label}
               </span>
             </Link>

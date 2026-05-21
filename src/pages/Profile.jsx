@@ -1,12 +1,192 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
+import {
+  collection, query, where, onSnapshot,
+  addDoc, serverTimestamp, deleteDoc, updateDoc,
+  arrayUnion, arrayRemove, doc,
+} from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { FiHeart, FiMessageCircle, FiGrid } from 'react-icons/fi';
 
 const EMOJIS = ['💕','🌹','🦋','🌸','💖','🍓','🌺','🐱','🐰','🌙','🎀','🍭','🌈','✨','🦄','🍒','🎸','🎹','🌊','🌿'];
 
+function AvatarImg({ user, size = 40, ring = false }) {
+  const inner = user?.photoURL
+    ? <img src={user.photoURL} alt=""
+        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: ring ? '3px solid #fff' : 'none' }} />
+    : <div style={{ width: '100%', height: '100%', borderRadius: '50%',
+        background: 'linear-gradient(135deg,#f43f5e,#a855f7)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: size * 0.42, border: ring ? '3px solid #fff' : 'none' }}>
+        {user?.avatarEmoji || '💕'}
+      </div>;
+  if (!ring) return (
+    <div style={{ width: size, height: size, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>{inner}</div>
+  );
+  return (
+    <div style={{ width: size + 8, height: size + 8, borderRadius: '50%', flexShrink: 0,
+      background: 'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)', padding: 3 }}>
+      {inner}
+    </div>
+  );
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const ms = ts.toMillis?.() ?? (typeof ts === 'number' ? ts : Date.now());
+  const d = (Date.now() - ms) / 1000;
+  if (d < 60) return 'เมื่อสักครู่';
+  if (d < 3600) return `${Math.floor(d / 60)} นาทีที่แล้ว`;
+  if (d < 86400) return `${Math.floor(d / 3600)} ชั่วโมงที่แล้ว`;
+  return `${Math.floor(d / 86400)} วันที่แล้ว`;
+}
+
+function CommentSection({ postId, currentUser, userProfile }) {
+  const [comments, setComments] = useState([]);
+  const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const q = query(collection(db, 'posts', postId, 'comments'));
+    return onSnapshot(q, snap => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+      setComments(data);
+    });
+  }, [postId]);
+
+  async function send(e) {
+    e.preventDefault();
+    if (!text.trim() || sending) return;
+    setSending(true);
+    await addDoc(collection(db, 'posts', postId, 'comments'), {
+      text: text.trim().slice(0, 500),
+      authorId: currentUser.uid,
+      authorName: userProfile.displayName,
+      authorEmoji: userProfile.avatarEmoji || '💕',
+      authorPhoto: userProfile.photoURL || null,
+      createdAt: serverTimestamp(),
+    });
+    setText('');
+    setSending(false);
+    inputRef.current?.focus();
+  }
+
+  return (
+    <div style={{ borderTop: '1px solid #efefef', padding: '10px 14px 14px' }}>
+      {comments.map(c => (
+        <div key={c.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
+          {c.authorPhoto
+            ? <img src={c.authorPhoto} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+            : <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#f43f5e,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', color: 'white', flexShrink: 0 }}>{c.authorEmoji}</div>
+          }
+          <p style={{ fontSize: '0.86rem', color: '#111', lineHeight: 1.45, flex: 1 }}>
+            <strong>{c.authorName}</strong>{' '}{c.text}
+          </p>
+        </div>
+      ))}
+      <form onSubmit={send} style={{ display: 'flex', gap: 8, alignItems: 'center',
+        borderTop: comments.length ? '1px solid #efefef' : 'none',
+        paddingTop: comments.length ? 8 : 0, marginTop: comments.length ? 4 : 0 }}>
+        {userProfile?.photoURL
+          ? <img src={userProfile.photoURL} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+          : <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#f43f5e,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: 'white', flexShrink: 0 }}>{userProfile?.avatarEmoji}</div>
+        }
+        <input ref={inputRef} value={text} onChange={e => setText(e.target.value)}
+          placeholder="เพิ่มความคิดเห็น..."
+          style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: '0.88rem', color: '#111' }}
+          maxLength={500} />
+        {text.trim() && (
+          <button type="submit" disabled={sending}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem', color: '#e8637a' }}>
+            โพส
+          </button>
+        )}
+      </form>
+    </div>
+  );
+}
+
+function PostModal({ post, currentUser, userProfile, onClose }) {
+  const [liking, setLiking] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
+  const [showComments, setShowComments] = useState(true);
+  const liked = post.likes?.includes(currentUser?.uid);
+  const likeCount = post.likes?.length || 0;
+
+  useEffect(() => {
+    const q = query(collection(db, 'posts', post.id, 'comments'));
+    return onSnapshot(q, snap => setCommentCount(snap.size));
+  }, [post.id]);
+
+  async function toggleLike() {
+    if (!currentUser || liking) return;
+    setLiking(true);
+    await updateDoc(doc(db, 'posts', post.id), {
+      likes: liked ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid),
+    });
+    setLiking(false);
+  }
+
+  async function deletePost() {
+    if (!confirm('ลบโพสนี้?')) return;
+    await deleteDoc(doc(db, 'posts', post.id));
+    onClose();
+  }
+
+  const isOwn = post.authorId === currentUser?.uid;
+
+  return (
+    <div
+      style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      onClick={onClose}>
+      <div
+        style={{ background: '#fff', width: '100%', maxWidth: 560, maxHeight: '90vh', borderRadius: '18px 18px 0 0', overflowY: 'auto' }}
+        onClick={e => e.stopPropagation()}>
+        {/* Handle bar */}
+        <div style={{ width: 40, height: 4, borderRadius: 2, background: '#dbdbdb', margin: '10px auto 0' }} />
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', gap: 10 }}>
+          <AvatarImg user={{ photoURL: post.authorPhoto, avatarEmoji: post.authorEmoji }} size={34} ring />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontWeight: 700, color: '#111', fontSize: '0.88rem' }}>{post.authorName}</p>
+            <p style={{ fontSize: '0.7rem', color: '#8e8e8e' }}>{timeAgo(post.createdAt)}</p>
+          </div>
+          {isOwn && (
+            <button onClick={deletePost} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8e8e8e', fontSize: '1.3rem', padding: '0 4px', letterSpacing: 2 }}>···</button>
+          )}
+        </div>
+
+        {post.imageUrl && (
+          <img src={post.imageUrl} onDoubleClick={toggleLike} style={{ width: '100%', display: 'block', maxHeight: 420, objectFit: 'cover' }} />
+        )}
+
+        <div style={{ padding: '8px 14px 4px' }}>
+          <div style={{ display: 'flex', gap: 14, marginBottom: 6 }}>
+            <button onClick={toggleLike} disabled={liking} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
+              <FiHeart size={24} fill={liked ? '#ed4956' : 'none'} color={liked ? '#ed4956' : '#111'} strokeWidth={liked ? 0 : 2} />
+            </button>
+            <button onClick={() => setShowComments(p => !p)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
+              <FiMessageCircle size={23} color={showComments ? '#e8637a' : '#111'} strokeWidth={2} />
+            </button>
+          </div>
+          {likeCount > 0 && <p style={{ fontWeight: 700, fontSize: '0.88rem', color: '#111', marginBottom: 4 }}>{likeCount.toLocaleString()} ถูกใจ</p>}
+          {post.text && <p style={{ fontSize: '0.88rem', color: '#111', lineHeight: 1.5, marginBottom: 6 }}><strong>{post.authorName}</strong>{' '}{post.text}</p>}
+        </div>
+
+        {showComments && <CommentSection postId={post.id} currentUser={currentUser} userProfile={userProfile} />}
+        <div style={{ height: 16 }} />
+      </div>
+    </div>
+  );
+}
+
 const CameraIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+  <svg style={{ width: 16, height: 16 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
     <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
   </svg>
@@ -18,13 +198,25 @@ export default function Profile() {
   const [form, setForm] = useState({});
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [posts, setPosts] = useState([]);
+  const [selectedPost, setSelectedPost] = useState(null);
   const fileRef = useRef();
 
   const days = userProfile?.relationshipStart
     ? Math.floor((Date.now() - new Date(userProfile.relationshipStart)) / 86400000) : null;
 
+  useEffect(() => {
+    if (!currentUser) return;
+    const q = query(collection(db, 'posts'), where('authorId', '==', currentUser.uid));
+    return onSnapshot(q, snap => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+      setPosts(data);
+    });
+  }, [currentUser]);
+
   function startEdit() {
-    setForm({ displayName:userProfile?.displayName||'', bio:userProfile?.bio||'', avatarEmoji:userProfile?.avatarEmoji||'💕', relationshipStart:userProfile?.relationshipStart||'' });
+    setForm({ displayName: userProfile?.displayName || '', bio: userProfile?.bio || '', avatarEmoji: userProfile?.avatarEmoji || '💕', relationshipStart: userProfile?.relationshipStart || '' });
     setEditing(true);
   }
 
@@ -33,7 +225,7 @@ export default function Profile() {
     if (isLocal) updateLocalProfile(form);
     else await updateUserProfile(form);
     setSaved(true); setEditing(false);
-    setTimeout(()=>setSaved(false), 2500);
+    setTimeout(() => setSaved(false), 2500);
   }
 
   async function handlePhoto(e) {
@@ -43,137 +235,176 @@ export default function Profile() {
     try {
       if (isLocal) await uploadLocalPhoto(file);
       else await uploadProfilePhoto(file);
-    } catch(err) { console.error(err); }
+    } catch (err) { console.error(err); }
     setUploading(false);
   }
 
+  const hasPartner = !!userProfile?.partnerId && days !== null && days >= 0;
+
   return (
-    <div className="min-h-screen" style={{background:'#f8f5f7'}}>
-      <Navbar/>
-      <div className="max-w-lg mx-auto px-4 py-8">
+    <div style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: 80 }}>
+      <Navbar />
 
-        {/* Top card */}
-        <div className="card overflow-hidden mb-4" style={{boxShadow:'0 8px 40px rgba(244,63,94,.12)'}}>
-          {/* Gradient header */}
-          <div className="relative pt-12 pb-20 px-6 text-center"
-            style={{background:'linear-gradient(135deg,#f43f5e,#c026d3,#7c3aed)'}}>
-            {/* Decorative circles */}
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full" style={{background:'rgba(255,255,255,0.07)',transform:'translate(30%,-30%)'}}/>
-            <div className="absolute bottom-4 left-4 w-16 h-16 rounded-full" style={{background:'rgba(255,255,255,0.06)'}}/>
-            <div className="absolute top-6 left-8 w-8 h-8 rounded-full" style={{background:'rgba(255,255,255,0.08)'}}/>
-          </div>
+      {/* IG profile header */}
+      <div style={{ background: '#fff', borderBottom: '1px solid #dbdbdb' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', padding: '24px 20px 20px' }}>
 
-          {/* Avatar — overlaps gradient */}
-          <div className="relative -mt-14 flex justify-center mb-3">
-            <div className="relative">
-              {userProfile?.photoURL ? (
-                <img src={userProfile.photoURL} alt="profile"
-                  className="w-28 h-28 rounded-full object-cover border-4 border-white"
-                  style={{boxShadow:'0 4px 20px rgba(0,0,0,.15)'}}/>
-              ) : (
-                <div className="w-28 h-28 rounded-full border-4 border-white flex items-center justify-center text-5xl"
-                  style={{background:'linear-gradient(135deg,#f43f5e,#a855f7)',boxShadow:'0 4px 20px rgba(0,0,0,.15)'}}>
-                  {userProfile?.avatarEmoji||'💕'}
+          {/* Avatar + stats row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 16 }}>
+            {/* Avatar with camera */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <AvatarImg user={userProfile} size={86} ring={hasPartner} />
+              <button onClick={() => fileRef.current?.click()}
+                style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: '#fff', border: '1.5px solid #dbdbdb', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111' }}>
+                {uploading
+                  ? <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px solid #dbdbdb', borderTopColor: '#111', animation: 'spin 0.8s linear infinite' }} />
+                  : <CameraIcon />}
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhoto} />
+            </div>
+
+            {/* Stats */}
+            <div style={{ flex: 1, display: 'flex', gap: 0, textAlign: 'center' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#111' }}>{posts.length}</div>
+                <div style={{ fontSize: '0.78rem', color: '#8e8e8e' }}>โพส</div>
+              </div>
+              {hasPartner && (
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#111' }}>{days}</div>
+                  <div style={{ fontSize: '0.78rem', color: '#8e8e8e' }}>วันด้วยกัน</div>
                 </div>
               )}
-              {/* Camera button */}
-              <button onClick={()=>fileRef.current?.click()}
-                className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-white flex items-center justify-center transition-all hover:scale-110 text-rose-500"
-                style={{boxShadow:'0 2px 10px rgba(0,0,0,.2)',border:'2px solid #fff1f3'}}>
-                {uploading
-                  ? <div className="w-4 h-4 border-2 border-rose-300 border-t-rose-500 rounded-full animate-spin-slow"/>
-                  : <CameraIcon/>}
-              </button>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto}/>
+              {partnerProfile && hasPartner && (
+                <div style={{ flex: 1 }}>
+                  <Link to={`/profile/${userProfile.partnerId}`} style={{ textDecoration: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                      {partnerProfile.photoURL
+                        ? <img src={partnerProfile.photoURL} style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }} />
+                        : <span style={{ fontSize: '1rem' }}>{partnerProfile.avatarEmoji || '💕'}</span>
+                      }
+                    </div>
+                    <div style={{ fontSize: '0.73rem', color: '#e8637a', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{partnerProfile.displayName}</div>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Info */}
-          <div className="text-center px-6 pb-6">
-            <h2 className="text-xl font-bold text-slate-800 mb-0.5">{userProfile?.displayName}</h2>
-            <p className="text-sm text-slate-400 mb-3">{userProfile?.email||'Local Account'}</p>
-            {userProfile?.bio && <p className="font-display italic text-slate-500 text-base mb-4">"{userProfile.bio}"</p>}
+          {/* Name + bio */}
+          <div style={{ marginBottom: 14 }}>
+            <p style={{ fontWeight: 700, color: '#111', fontSize: '0.95rem', marginBottom: 2 }}>{userProfile?.displayName}</p>
+            {userProfile?.bio && <p style={{ color: '#111', fontSize: '0.88rem', lineHeight: 1.5 }}>{userProfile.bio}</p>}
+            {isLocal && <span style={{ fontSize: '0.75rem', color: '#8e8e8e', background: '#efefef', borderRadius: 6, padding: '2px 8px', marginTop: 4, display: 'inline-block' }}>Local Mode</span>}
+            {saved && <span style={{ fontSize: '0.75rem', color: '#22c55e', background: '#f0fdf4', borderRadius: 6, padding: '2px 8px', marginTop: 4, display: 'inline-block' }}>บันทึกแล้ว</span>}
+          </div>
 
-            {/* Stats row — only show if has partner */}
-            {userProfile?.partnerId && days !== null && days >= 0 && (
-              <div className="mb-5">
-                {/* Partner name */}
-                {partnerProfile && (
-                  <div className="flex items-center justify-center gap-2 mb-3">
-                    <span className="text-rose-300">💕</span>
-                    <Link to={`/profile/${userProfile.partnerId}`}
-                      className="font-bold text-rose-400 hover:text-rose-500 transition-colors"
-                      style={{ fontSize: '0.9rem' }}>
-                      {partnerProfile.displayName}
-                    </Link>
-                  </div>
-                )}
-                <div className="flex justify-center gap-3">
-                  <div className="text-center px-6 py-3.5 rounded-2xl flex-1"
-                    style={{background:'linear-gradient(135deg,#fff1f3,#ffe4e9)',border:'1px solid rgba(244,63,94,0.12)',boxShadow:'0 2px 12px rgba(244,63,94,0.08)'}}>
-                    <p className="font-display font-bold text-4xl text-gradient leading-none">{days}</p>
-                    <p className="text-xs text-rose-400 font-bold uppercase tracking-wider mt-1">วันด้วยกัน</p>
-                  </div>
-                  {userProfile?.relationshipStart && (
-                    <div className="text-center px-6 py-3.5 rounded-2xl flex-1"
-                      style={{background:'linear-gradient(135deg,#f3e8ff,#ede9fe)',border:'1px solid rgba(168,85,247,0.12)',boxShadow:'0 2px 12px rgba(168,85,247,0.08)'}}>
-                      <p className="font-bold text-purple-500 text-base mt-1">
-                        {new Date(userProfile.relationshipStart).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}
-                      </p>
-                      <p className="text-xs text-purple-400 font-bold uppercase tracking-wider mt-0.5">วันแรก</p>
-                    </div>
-                  )}
+          {/* Action button */}
+          {!editing ? (
+            <button onClick={startEdit}
+              style={{ width: '100%', padding: '7px 16px', borderRadius: 8, border: '1px solid #dbdbdb', background: '#fff', fontWeight: 700, fontSize: '0.88rem', color: '#111', cursor: 'pointer' }}>
+              แก้ไขโปรไฟล์
+            </button>
+          ) : (
+            <form onSubmit={handleSave} style={{ marginTop: 4 }}>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#8e8e8e', display: 'block', marginBottom: 4 }}>เลือก Emoji</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {EMOJIS.map(e => (
+                    <button key={e} type="button" onClick={() => setForm(f => ({ ...f, avatarEmoji: e }))}
+                      style={{ fontSize: '1.2rem', padding: '4px 6px', borderRadius: 8, border: form.avatarEmoji === e ? '2px solid #e8637a' : '2px solid transparent', background: form.avatarEmoji === e ? '#fff1f3' : 'none', cursor: 'pointer', opacity: form.avatarEmoji === e ? 1 : 0.5 }}>
+                      {e}
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
-
-            {isLocal && <div className="badge badge-yellow mb-4 mx-auto">📱 Local Mode</div>}
-            {saved && <div className="badge badge-green mb-4 mx-auto">✓ บันทึกแล้ว</div>}
-
-            {!editing ? (
-              <button onClick={startEdit} className="btn-primary w-full">แก้ไขโปรไฟล์</button>
-            ) : (
-              <form onSubmit={handleSave} className="text-left space-y-4 pt-2">
-                <div>
-                  <label className="input-label">เลือก Emoji</label>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {EMOJIS.map(e=>(
-                      <button key={e} type="button" onClick={()=>setForm(f=>({...f,avatarEmoji:e}))}
-                        className={`text-xl p-1.5 rounded-xl transition-all ${form.avatarEmoji===e?'scale-110 shadow':'opacity-40 hover:opacity-80'}`}
-                        style={form.avatarEmoji===e?{background:'#fff1f3',outline:'2px solid #f43f5e'}:{}}>
-                        {e}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="input-label">ชื่อเล่น</label>
-                  <input value={form.displayName} onChange={e=>setForm(f=>({...f,displayName:e.target.value}))} className="input" required maxLength={50}/>
-                </div>
-                <div>
-                  <label className="input-label">Bio</label>
-                  <textarea value={form.bio} onChange={e=>setForm(f=>({...f,bio:e.target.value}))}
-                    placeholder="เขียนอะไรสักอย่างเกี่ยวกับตัวเอง..."
-                    className="input resize-none h-20" style={{resize:'none'}} maxLength={200}/>
-                </div>
-                <div>
-                  <label className="input-label">วันที่เริ่มคบกัน</label>
-                  <input type="date" value={form.relationshipStart} onChange={e=>setForm(f=>({...f,relationshipStart:e.target.value}))} className="input"/>
-                </div>
-                <div className="flex gap-3 pt-1">
-                  <button type="submit" className="btn-primary flex-1 justify-center">บันทึก</button>
-                  <button type="button" onClick={()=>setEditing(false)}
-                    className="flex-1 py-3 rounded-2xl font-bold text-sm text-slate-500 transition-colors hover:text-slate-700"
-                    style={{background:'#f1f5f9'}}>
-                    ยกเลิก
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
+              <div style={{ marginBottom: 10 }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#8e8e8e', display: 'block', marginBottom: 4 }}>ชื่อเล่น</label>
+                <input value={form.displayName} onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))} required maxLength={50}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #dbdbdb', outline: 'none', fontSize: '0.9rem', color: '#111' }} />
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#8e8e8e', display: 'block', marginBottom: 4 }}>Bio</label>
+                <textarea value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
+                  placeholder="เขียนอะไรสักอย่าง..." maxLength={200} rows={3}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #dbdbdb', outline: 'none', fontSize: '0.9rem', color: '#111', resize: 'none' }} />
+              </div>
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#8e8e8e', display: 'block', marginBottom: 4 }}>วันที่เริ่มคบกัน</label>
+                <input type="date" value={form.relationshipStart} onChange={e => setForm(f => ({ ...f, relationshipStart: e.target.value }))}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #dbdbdb', outline: 'none', fontSize: '0.9rem', color: '#111' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button type="submit"
+                  style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: 'linear-gradient(135deg,#f43f5e,#a855f7)', color: 'white', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}>
+                  บันทึก
+                </button>
+                <button type="button" onClick={() => setEditing(false)}
+                  style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid #dbdbdb', background: '#fff', fontWeight: 700, fontSize: '0.9rem', color: '#111', cursor: 'pointer' }}>
+                  ยกเลิก
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
+        {/* Grid/posts tab divider */}
+        <div style={{ borderTop: '1px solid #dbdbdb', display: 'flex', justifyContent: 'center', padding: '10px 0 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 16px 10px', borderTop: '2px solid #111' }}>
+            <FiGrid size={14} strokeWidth={2.5} color="#111" />
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#111' }}>โพส</span>
+          </div>
+        </div>
       </div>
+
+      {/* Post grid */}
+      <div style={{ maxWidth: 600, margin: '0 auto' }}>
+        {posts.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 24px', background: '#fafafa' }}>
+            <div style={{ fontSize: '3rem', marginBottom: 12 }}>✍️</div>
+            <p style={{ fontWeight: 700, color: '#111', fontSize: '0.95rem', marginBottom: 4 }}>ยังไม่มีโพส</p>
+            <p style={{ color: '#8e8e8e', fontSize: '0.85rem' }}>แชร์ภาพหรือความรู้สึกในหน้าฟีดได้เลย</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, paddingTop: 2 }}>
+            {posts.map(post => (
+              <button key={post.id} onClick={() => setSelectedPost(post)}
+                style={{ aspectRatio: '1', background: '#efefef', border: 'none', padding: 0, cursor: 'pointer', overflow: 'hidden', position: 'relative' }}>
+                {post.imageUrl
+                  ? <img src={post.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  : <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 8, background: '#f9f9f9' }}>
+                      <p style={{ fontSize: '0.7rem', color: '#6b7280', textAlign: 'center', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical' }}>
+                        {post.text}
+                      </p>
+                    </div>
+                }
+                {/* Like count overlay */}
+                {(post.likes?.length > 0) && (
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                    onMouseLeave={e => e.currentTarget.style.opacity = '0'}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: 'rgba(0,0,0,0.45)', borderRadius: 8, padding: '4px 10px' }}>
+                      <span style={{ color: 'white', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <FiHeart size={13} fill="white" color="white" /> {post.likes.length}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Post modal */}
+      {selectedPost && (
+        <PostModal
+          post={selectedPost}
+          currentUser={currentUser}
+          userProfile={userProfile}
+          onClose={() => setSelectedPost(null)}
+        />
+      )}
     </div>
   );
 }

@@ -1,20 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, onSnapshot, updateDoc, arrayUnion, arrayRemove, addDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import {
+  doc, getDoc, collection, query, where, onSnapshot, updateDoc,
+  arrayUnion, arrayRemove, addDoc, serverTimestamp, deleteDoc,
+} from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
-import { FiMessageCircle, FiArrowLeft, FiUserPlus, FiUserCheck, FiHeart, FiGrid, FiSend, FiTrash2 } from 'react-icons/fi';
+import { FiMessageCircle, FiArrowLeft, FiUserPlus, FiUserCheck, FiHeart, FiGrid, FiX } from 'react-icons/fi';
 
-function Avatar({ user, size = 40 }) {
-  if (user?.photoURL) return (
-    <img src={user.photoURL} alt="" className="rounded-full object-cover flex-shrink-0"
-      style={{ width: size, height: size }} />
+function AvatarImg({ user, size = 40, ring = false }) {
+  const inner = user?.photoURL
+    ? <img src={user.photoURL} alt=""
+        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', border: ring ? '3px solid #fff' : 'none' }} />
+    : <div style={{ width: '100%', height: '100%', borderRadius: '50%',
+        background: 'linear-gradient(135deg,#f43f5e,#a855f7)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: size * 0.42, border: ring ? '3px solid #fff' : 'none' }}>
+        {user?.avatarEmoji || '💕'}
+      </div>;
+  if (!ring) return (
+    <div style={{ width: size, height: size, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>{inner}</div>
   );
   return (
-    <div className="rounded-full flex items-center justify-center flex-shrink-0 text-white"
-      style={{ width: size, height: size, background: 'linear-gradient(135deg,#f43f5e,#a855f7)', fontSize: size * 0.38 }}>
-      {user?.avatarEmoji || '💕'}
+    <div style={{ width: size + 8, height: size + 8, borderRadius: '50%', flexShrink: 0,
+      background: 'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)', padding: 3 }}>
+      {inner}
     </div>
   );
 }
@@ -62,73 +73,46 @@ function CommentSection({ postId, currentUser, userProfile }) {
   }
 
   return (
-    <div style={{ borderTop: '1px solid #f0f0f0', padding: '14px 16px 16px' }}>
-      <div className="flex items-center gap-2 mb-3">
-        <FiMessageCircle size={15} color="#9ca3af" />
-        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#6b7280' }}>
-          ความคิดเห็น ({comments.length})
-        </span>
-      </div>
-      {comments.length > 0 && (
-        <div className="space-y-2.5 mb-4">
-          {comments.map(c => (
-            <div key={c.id} className="flex gap-2">
-              {c.authorPhoto ? (
-                <img src={c.authorPhoto} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
-              ) : (
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)', color: 'white' }}>
-                  {c.authorEmoji || '💕'}
-                </div>
-              )}
-              <div className="flex-1 rounded-2xl px-3 py-2" style={{ background: '#f9fafb' }}>
-                <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>{c.authorName}</p>
-                <p style={{ fontSize: '0.88rem', color: '#4b5563', lineHeight: 1.45, marginTop: 2 }}>{c.text}</p>
-              </div>
-            </div>
-          ))}
+    <div style={{ borderTop: '1px solid #efefef', padding: '10px 14px 14px' }}>
+      {comments.map(c => (
+        <div key={c.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
+          {c.authorPhoto
+            ? <img src={c.authorPhoto} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+            : <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#f43f5e,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', color: 'white', flexShrink: 0 }}>{c.authorEmoji}</div>
+          }
+          <p style={{ fontSize: '0.86rem', color: '#111', lineHeight: 1.45, flex: 1 }}>
+            <strong>{c.authorName}</strong>{' '}{c.text}
+          </p>
         </div>
-      )}
-      <form onSubmit={send} className="flex gap-2 items-center">
-        <Avatar user={userProfile} size={32} />
-        <input
-          ref={inputRef}
-          value={text}
-          onChange={e => setText(e.target.value)}
-          placeholder="เขียนความคิดเห็น..."
-          className="flex-1 outline-none"
-          style={{
-            background: '#f3f4f6',
-            border: '1.5px solid #e5e7eb',
-            borderRadius: 99,
-            padding: '8px 16px',
-            color: '#1f2937',
-            fontSize: '0.85rem',
-          }}
-          maxLength={500}
-        />
-        <button type="submit" disabled={!text.trim() || sending}
-          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white transition-all active:scale-90"
-          style={{ background: text.trim() ? 'linear-gradient(135deg,#f43f5e,#a855f7)' : '#e5e7eb' }}>
-          <FiSend size={14} />
-        </button>
+      ))}
+      <form onSubmit={send} style={{ display: 'flex', gap: 8, alignItems: 'center',
+        borderTop: comments.length ? '1px solid #efefef' : 'none',
+        paddingTop: comments.length ? 8 : 0, marginTop: comments.length ? 4 : 0 }}>
+        {userProfile?.photoURL
+          ? <img src={userProfile.photoURL} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+          : <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#f43f5e,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: 'white', flexShrink: 0 }}>{userProfile?.avatarEmoji}</div>
+        }
+        <input ref={inputRef} value={text} onChange={e => setText(e.target.value)}
+          placeholder="เพิ่มความคิดเห็น..."
+          style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: '0.88rem', color: '#111' }}
+          maxLength={500} />
+        {text.trim() && (
+          <button type="submit" disabled={sending}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem', color: '#e8637a' }}>
+            โพส
+          </button>
+        )}
       </form>
     </div>
   );
 }
 
-function PostCard({ post, currentUser, userProfile }) {
-  const [showComments, setShowComments] = useState(false);
-  const [commentCount, setCommentCount] = useState(0);
+function PostModal({ post, currentUser, userProfile, onClose }) {
   const [liking, setLiking] = useState(false);
+  const [showComments, setShowComments] = useState(true);
   const liked = post.likes?.includes(currentUser?.uid);
   const likeCount = post.likes?.length || 0;
   const isOwn = post.authorId === currentUser?.uid;
-
-  useEffect(() => {
-    const q = query(collection(db, 'posts', post.id, 'comments'));
-    return onSnapshot(q, snap => setCommentCount(snap.size));
-  }, [post.id]);
 
   async function toggleLike() {
     if (!currentUser || liking) return;
@@ -142,93 +126,43 @@ function PostCard({ post, currentUser, userProfile }) {
   async function deletePost() {
     if (!confirm('ลบโพสนี้?')) return;
     await deleteDoc(doc(db, 'posts', post.id));
+    onClose();
   }
 
   return (
-    <div className="overflow-hidden"
-      style={{
-        background: 'white',
-        borderRadius: 20,
-        boxShadow: '0 2px 20px rgba(244,63,94,0.07), 0 1px 4px rgba(0,0,0,0.04)',
-      }}>
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-3">
-        <div className="flex-shrink-0">
-          <Avatar user={{ photoURL: post.authorPhoto, avatarEmoji: post.authorEmoji }} size={44} />
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      onClick={onClose}>
+      <div style={{ background: '#fff', width: '100%', maxWidth: 560, maxHeight: '90vh', borderRadius: '18px 18px 0 0', overflowY: 'auto' }}
+        onClick={e => e.stopPropagation()}>
+        <div style={{ width: 40, height: 4, borderRadius: 2, background: '#dbdbdb', margin: '10px auto 0' }} />
+        <div style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', gap: 10 }}>
+          <AvatarImg user={{ photoURL: post.authorPhoto, avatarEmoji: post.authorEmoji }} size={34} ring />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontWeight: 700, color: '#111', fontSize: '0.88rem' }}>{post.authorName}</p>
+            <p style={{ fontSize: '0.7rem', color: '#8e8e8e' }}>{timeAgo(post.createdAt)}</p>
+          </div>
+          {isOwn && (
+            <button onClick={deletePost} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8e8e8e', fontSize: '1.3rem', padding: '0 4px', letterSpacing: 2 }}>···</button>
+          )}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-slate-800 leading-tight" style={{ fontSize: '0.93rem' }}>{post.authorName}</p>
-          <p style={{ fontSize: '0.72rem', color: '#b0a8bc', marginTop: 2 }}>{timeAgo(post.createdAt)}</p>
-        </div>
-        {isOwn && (
-          <button onClick={deletePost}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-red-50 active:scale-90"
-            style={{ color: '#e0d0e8' }}>
-            <FiTrash2 size={14} />
-          </button>
+        {post.imageUrl && (
+          <img src={post.imageUrl} onDoubleClick={toggleLike} style={{ width: '100%', display: 'block', maxHeight: 420, objectFit: 'cover' }} />
         )}
-      </div>
-      {/* Text */}
-      {post.text && (
-        <p className="px-4 pb-3 text-slate-700 leading-relaxed" style={{ fontSize: '0.92rem' }}>
-          {post.text}
-        </p>
-      )}
-      {/* Image */}
-      {post.imageUrl && (
-        <div className="px-3 pb-3">
-          <img src={post.imageUrl} alt="" className="w-full object-cover" style={{ borderRadius: 14, maxHeight: 380 }} />
-        </div>
-      )}
-      {/* Stats row */}
-      {(likeCount > 0 || commentCount > 0) && (
-        <div className="flex items-center justify-between px-4 pb-2" style={{ gap: 8 }}>
-          {likeCount > 0 && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-5 h-5 rounded-full flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)' }}>
-                <FiHeart size={10} fill="white" color="white" />
-              </div>
-              <span style={{ fontSize: '0.78rem', color: '#9ca3af', fontWeight: 600 }}>{likeCount}</span>
-            </div>
-          )}
-          {commentCount > 0 && (
-            <button onClick={() => setShowComments(p => !p)}
-              className="ml-auto"
-              style={{ fontSize: '0.78rem', color: '#b0a8bc', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>
-              {commentCount} ความคิดเห็น
+        <div style={{ padding: '8px 14px 4px' }}>
+          <div style={{ display: 'flex', gap: 14, marginBottom: 6 }}>
+            <button onClick={toggleLike} disabled={liking} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
+              <FiHeart size={24} fill={liked ? '#ed4956' : 'none'} color={liked ? '#ed4956' : '#111'} strokeWidth={liked ? 0 : 2} />
             </button>
-          )}
+            <button onClick={() => setShowComments(p => !p)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
+              <FiMessageCircle size={23} color={showComments ? '#e8637a' : '#111'} strokeWidth={2} />
+            </button>
+          </div>
+          {likeCount > 0 && <p style={{ fontWeight: 700, fontSize: '0.88rem', color: '#111', marginBottom: 4 }}>{likeCount.toLocaleString()} ถูกใจ</p>}
+          {post.text && <p style={{ fontSize: '0.88rem', color: '#111', lineHeight: 1.5, marginBottom: 6 }}><strong>{post.authorName}</strong>{' '}{post.text}</p>}
         </div>
-      )}
-      {/* Divider */}
-      <div style={{ height: 1, background: '#f5f0fa', margin: '0 16px' }} />
-      {/* Action buttons */}
-      <div className="flex items-center px-2 py-1">
-        <button onClick={toggleLike} disabled={liking}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl font-semibold transition-all active:scale-95"
-          style={{ color: liked ? '#f43f5e' : '#c4b8d0', fontSize: '0.85rem' }}>
-          <FiHeart
-            size={18}
-            fill={liked ? '#f43f5e' : 'none'}
-            color={liked ? '#f43f5e' : '#c4b8d0'}
-            strokeWidth={liked ? 0 : 2}
-            style={{ transition: 'transform 0.15s', transform: liked ? 'scale(1.15)' : 'scale(1)' }}
-          />
-          ถูกใจ
-        </button>
-        <div style={{ width: 1, height: 20, background: '#f0e8f5', flexShrink: 0 }} />
-        <button onClick={() => setShowComments(p => !p)}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl font-semibold transition-all active:scale-95"
-          style={{ color: showComments ? '#a855f7' : '#c4b8d0', fontSize: '0.85rem' }}>
-          <FiMessageCircle size={18} color={showComments ? '#a855f7' : '#c4b8d0'} />
-          คอมเมนต์
-        </button>
+        {showComments && <CommentSection postId={post.id} currentUser={currentUser} userProfile={userProfile} />}
+        <div style={{ height: 16 }} />
       </div>
-      {/* Comments */}
-      {showComments && (
-        <CommentSection postId={post.id} currentUser={currentUser} userProfile={userProfile} />
-      )}
     </div>
   );
 }
@@ -243,9 +177,14 @@ export default function ViewProfile() {
   const [loading, setLoading] = useState(true);
   const [friendStatus, setFriendStatus] = useState('none');
   const [adding, setAdding] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
 
   const isOwn = currentUser?.uid === uid;
   const canSeePosts = isOwn || friendStatus === 'friends';
+
+  const days = profile?.partnerId && profile?.relationshipStart
+    ? Math.floor((Date.now() - new Date(profile.relationshipStart)) / 86400000) : null;
+  const hasPartner = !!profile?.partnerId && days !== null && days >= 0;
 
   useEffect(() => {
     getDoc(doc(db, 'users', uid)).then(async snap => {
@@ -266,7 +205,6 @@ export default function ViewProfile() {
     getFriendStatus(uid).then(setFriendStatus);
   }, [uid, currentUser, isOwn]);
 
-  // Load posts once friend status is known
   useEffect(() => {
     if (!canSeePosts) return;
     const q = query(collection(db, 'posts'), where('authorId', '==', uid));
@@ -277,9 +215,6 @@ export default function ViewProfile() {
     });
   }, [uid, canSeePosts]);
 
-  const days = profile?.partnerId && profile?.relationshipStart
-    ? Math.floor((Date.now() - new Date(profile.relationshipStart)) / 86400000) : null;
-
   async function handleAdd() {
     if (!profile) return;
     setAdding(true);
@@ -289,177 +224,156 @@ export default function ViewProfile() {
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8" style={{ background: 'linear-gradient(180deg,#fdf4ff 0%,#f4eef8 100%)' }}>
+    <div style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: 80 }}>
       <Navbar />
-      <div className="max-w-lg mx-auto px-4 py-6">
-        {loading ? (
-          <div className="flex justify-center pt-20">
-            <div className="w-8 h-8 border-2 border-rose-300 border-t-rose-500 rounded-full animate-spin-slow" />
-          </div>
-        ) : !profile ? (
-          <div className="text-center pt-20">
-            <div className="text-5xl mb-4">😕</div>
-            <p className="font-bold text-slate-600 mb-2">ไม่พบโปรไฟล์</p>
-            <button onClick={() => navigate(-1)} className="btn-primary mt-4">กลับ</button>
-          </div>
-        ) : (
-          <>
-            {/* Profile card */}
-            <div style={{ background: 'white', borderRadius: 24, overflow: 'hidden', boxShadow: '0 4px 32px rgba(244,63,94,0.10)', marginBottom: 20 }}>
 
-              {/* Gradient banner */}
-              <div className="relative pt-12 pb-20 px-6"
-                style={{ background: 'linear-gradient(135deg,#f43f5e,#c026d3,#7c3aed)' }}>
-                <div style={{ position: 'absolute', top: -24, right: -24, width: 110, height: 110, borderRadius: '50%', background: 'rgba(255,255,255,0.07)' }} />
-                <div style={{ position: 'absolute', bottom: -20, left: -10, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
-                <button onClick={() => navigate(-1)}
-                  className="absolute top-4 left-4 w-9 h-9 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', cursor: 'pointer' }}>
-                  <FiArrowLeft size={18} />
-                </button>
-              </div>
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid #dbdbdb', borderTopColor: '#111', animation: 'spin 0.8s linear infinite' }} />
+        </div>
+      ) : !profile ? (
+        <div style={{ textAlign: 'center', paddingTop: 80 }}>
+          <div style={{ fontSize: '3rem', marginBottom: 12 }}>😕</div>
+          <p style={{ fontWeight: 700, color: '#111', marginBottom: 8 }}>ไม่พบโปรไฟล์</p>
+          <button onClick={() => navigate(-1)} style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)', color: 'white', border: 'none', borderRadius: 10, padding: '10px 24px', fontWeight: 700, cursor: 'pointer' }}>กลับ</button>
+        </div>
+      ) : (
+        <>
+          {/* IG profile header */}
+          <div style={{ background: '#fff', borderBottom: '1px solid #dbdbdb' }}>
+            <div style={{ maxWidth: 600, margin: '0 auto', padding: '16px 16px 0' }}>
 
-              {/* Avatar */}
-              <div className="relative -mt-16 flex justify-center mb-4">
-                {profile.photoURL ? (
-                  <img src={profile.photoURL} alt=""
-                    className="w-28 h-28 rounded-full object-cover border-4 border-white"
-                    style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }} />
-                ) : (
-                  <div className="w-28 h-28 rounded-full border-4 border-white flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', fontSize: '3rem' }}>
-                    {profile.avatarEmoji || '💕'}
+              {/* Back button */}
+              <button onClick={() => navigate(-1)}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: '#111', marginBottom: 16, padding: 0, fontSize: '0.9rem', fontWeight: 600 }}>
+                <FiArrowLeft size={20} /> กลับ
+              </button>
+
+              {/* Avatar + stats */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 16 }}>
+                <div style={{ flexShrink: 0 }}>
+                  <AvatarImg user={profile} size={86} ring={hasPartner} />
+                </div>
+                <div style={{ flex: 1, display: 'flex', gap: 0, textAlign: 'center' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#111' }}>{posts.length}</div>
+                    <div style={{ fontSize: '0.78rem', color: '#8e8e8e' }}>โพส</div>
                   </div>
-                )}
-              </div>
-
-              {/* Info */}
-              <div className="text-center px-6 pb-6">
-                <h2 className="text-2xl font-bold text-slate-800 mb-1">{profile.displayName}</h2>
-                {profile.bio && (
-                  <p className="font-display italic text-slate-400 mb-4" style={{ fontSize: '0.95rem' }}>"{profile.bio}"</p>
-                )}
-
-                {/* Partner + days */}
-                {profile.partnerId && days !== null && days >= 0 && (
-                  <div className="mb-5">
-                    {partnerProfile && (
-                      <div className="flex items-center justify-center gap-2 mb-4">
-                        <div className="w-px h-4" style={{ background: '#fda4af' }} />
-                        <span style={{ fontSize: '0.82rem', color: '#b0a8bc' }}>คู่รักกับ</span>
-                        <Link to={`/profile/${profile.partnerId}`}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-full font-bold transition-all hover:opacity-80"
-                          style={{ background: '#fff1f3', color: '#e8637a', fontSize: '0.85rem' }}>
-                          {partnerProfile.photoURL
-                            ? <img src={partnerProfile.photoURL} alt="" className="w-5 h-5 rounded-full object-cover" />
-                            : <span style={{ fontSize: '0.9rem' }}>{partnerProfile.avatarEmoji || '💕'}</span>
-                          }
-                          {partnerProfile.displayName}
-                        </Link>
-                        <div className="w-px h-4" style={{ background: '#fda4af' }} />
-                      </div>
-                    )}
-                    <div className="flex justify-center gap-3">
-                      <div className="text-center px-6 py-3.5 rounded-2xl flex-1"
-                        style={{ background: 'linear-gradient(135deg,#fff1f3,#ffe4e9)', border: '1px solid rgba(244,63,94,0.12)' }}>
-                        <p className="font-bold text-3xl text-gradient leading-none">{days}</p>
-                        <p className="text-xs text-rose-400 font-bold uppercase tracking-wider mt-1">วันด้วยกัน</p>
-                      </div>
-                      {profile.relationshipStart && (
-                        <div className="text-center px-6 py-3.5 rounded-2xl flex-1"
-                          style={{ background: 'linear-gradient(135deg,#f3e8ff,#ede9fe)', border: '1px solid rgba(168,85,247,0.12)' }}>
-                          <p className="font-bold text-purple-500 text-base mt-1">
-                            {new Date(profile.relationshipStart).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}
-                          </p>
-                          <p className="text-xs text-purple-400 font-bold uppercase tracking-wider mt-0.5">วันแรก</p>
-                        </div>
-                      )}
+                  {hasPartner && (
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#111' }}>{days}</div>
+                      <div style={{ fontSize: '0.78rem', color: '#8e8e8e' }}>วันด้วยกัน</div>
                     </div>
-                  </div>
-                )}
-
-                {/* Action buttons */}
-                {!isOwn && (
-                  <div className="flex gap-3">
-                    {friendStatus === 'friends' && (
-                      <Link to={`/messages/${uid}`}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-white transition-all active:scale-95"
-                        style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)', fontSize: '0.92rem', boxShadow: '0 4px 16px rgba(244,63,94,0.3)' }}>
-                        <FiMessageCircle size={17} /> ส่งข้อความ
-                      </Link>
-                    )}
-                    {friendStatus === 'none' && (
-                      <button onClick={handleAdd} disabled={adding}
-                        className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-bold text-white transition-all active:scale-95"
-                        style={{ background: 'linear-gradient(135deg,#6366f1,#a855f7)', fontSize: '0.92rem', boxShadow: '0 4px 16px rgba(99,102,241,0.25)' }}>
-                        {adding
-                          ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin-slow" />
-                          : <><FiUserPlus size={17} /> เพิ่มเพื่อน</>}
-                      </button>
-                    )}
-                    {friendStatus === 'sent' && (
-                      <div className="flex-1 flex items-center justify-center py-3 rounded-2xl font-bold"
-                        style={{ background: '#f3f4f6', color: '#9ca3af', fontSize: '0.92rem' }}>
-                        ส่งคำขอแล้ว
+                  )}
+                  {partnerProfile && hasPartner && (
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {partnerProfile.photoURL
+                          ? <img src={partnerProfile.photoURL} style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }} />
+                          : <span style={{ fontSize: '1rem' }}>{partnerProfile.avatarEmoji || '💕'}</span>
+                        }
                       </div>
-                    )}
-                    {friendStatus === 'received' && (
-                      <div className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl font-bold"
-                        style={{ background: '#f0fdf4', color: '#16a34a', fontSize: '0.92rem' }}>
-                        <FiUserCheck size={17} /> รับคำขอใน คนรู้จัก
-                      </div>
-                    )}
-                    {friendStatus === 'friends' && (
-                      <div className="flex items-center justify-center gap-1.5 py-3 px-4 rounded-2xl font-bold"
-                        style={{ background: '#f0fdf4', color: '#16a34a', fontSize: '0.85rem' }}>
-                        <FiUserCheck size={15} /> เพื่อน
-                      </div>
-                    )}
-                  </div>
-                )}
+                      <div style={{ fontSize: '0.73rem', color: '#e8637a', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{partnerProfile.displayName}</div>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Name + bio */}
+              <div style={{ marginBottom: 14 }}>
+                <p style={{ fontWeight: 700, color: '#111', fontSize: '0.95rem', marginBottom: 2 }}>{profile.displayName}</p>
+                {profile.bio && <p style={{ color: '#111', fontSize: '0.88rem', lineHeight: 1.5 }}>{profile.bio}</p>}
+              </div>
+
+              {/* Action buttons */}
+              {!isOwn && (
+                <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                  {friendStatus === 'friends' && (
+                    <Link to={`/messages/${uid}`}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px', borderRadius: 8, border: '1px solid #dbdbdb', background: '#fff', fontWeight: 700, fontSize: '0.88rem', color: '#111', textDecoration: 'none' }}>
+                      <FiMessageCircle size={16} /> ส่งข้อความ
+                    </Link>
+                  )}
+                  {friendStatus === 'none' && (
+                    <button onClick={handleAdd} disabled={adding}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px', borderRadius: 8, border: 'none', background: '#e8637a', color: 'white', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer' }}>
+                      {adding
+                        ? <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', animation: 'spin 0.8s linear infinite' }} />
+                        : <><FiUserPlus size={15} /> เพิ่มเพื่อน</>}
+                    </button>
+                  )}
+                  {friendStatus === 'sent' && (
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', borderRadius: 8, border: '1px solid #dbdbdb', background: '#fff', fontWeight: 700, fontSize: '0.88rem', color: '#8e8e8e' }}>
+                      ส่งคำขอแล้ว
+                    </div>
+                  )}
+                  {friendStatus === 'received' && (
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px', borderRadius: 8, border: 'none', background: '#22c55e', color: 'white', fontWeight: 700, fontSize: '0.88rem' }}>
+                      <FiUserCheck size={15} /> รับในหน้าคนรู้จัก
+                    </div>
+                  )}
+                  {friendStatus === 'friends' && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: '1px solid #dbdbdb', background: '#fff', fontWeight: 700, fontSize: '0.85rem', color: '#22c55e', flexShrink: 0 }}>
+                      <FiUserCheck size={14} /> เพื่อน
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Posts section */}
-            {canSeePosts && (
-              <div>
-                <div className="flex items-center gap-2 mb-3 px-1">
-                  <FiGrid size={15} color="#b0a8bc" />
-                  <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#6b7280' }}>
-                    โพส{posts.length > 0 ? ` (${posts.length})` : ''}
-                  </span>
+            {/* Grid tab */}
+            <div style={{ borderTop: '1px solid #dbdbdb', display: 'flex', justifyContent: 'center', padding: '10px 0 0', maxWidth: 600, margin: '0 auto' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 16px 10px', borderTop: '2px solid #111' }}>
+                <FiGrid size={14} strokeWidth={2.5} color="#111" />
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#111' }}>โพส</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Post grid */}
+          <div style={{ maxWidth: 600, margin: '0 auto' }}>
+            {canSeePosts ? (
+              posts.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 24px' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: 12 }}>✍️</div>
+                  <p style={{ color: '#8e8e8e', fontSize: '0.88rem' }}>ยังไม่มีโพส</p>
                 </div>
-
-                {posts.length === 0 ? (
-                  <div className="text-center py-12"
-                    style={{ background: 'white', borderRadius: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                    <div className="text-4xl mb-3">✍️</div>
-                    <p style={{ fontSize: '0.88rem', color: '#b0a8bc', fontWeight: 500 }}>
-                      {isOwn ? 'คุณยังไม่มีโพส' : 'ยังไม่มีโพส'}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {posts.map(post => (
-                      <PostCard key={post.id} post={post} currentUser={currentUser} userProfile={userProfile} />
-                    ))}
-                  </div>
-                )}
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, paddingTop: 2 }}>
+                  {posts.map(post => (
+                    <button key={post.id} onClick={() => setSelectedPost(post)}
+                      style={{ aspectRatio: '1', background: '#efefef', border: 'none', padding: 0, cursor: 'pointer', overflow: 'hidden', position: 'relative' }}>
+                      {post.imageUrl
+                        ? <img src={post.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8, background: '#f9f9f9' }}>
+                            <p style={{ fontSize: '0.7rem', color: '#6b7280', textAlign: 'center', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical' }}>
+                              {post.text}
+                            </p>
+                          </div>
+                      }
+                    </button>
+                  ))}
+                </div>
+              )
+            ) : (
+              <div style={{ textAlign: 'center', padding: '60px 24px', background: '#fff', borderTop: '1px solid #efefef' }}>
+                <div style={{ fontSize: '3rem', marginBottom: 12 }}>🔒</div>
+                <p style={{ fontWeight: 700, color: '#111', marginBottom: 4 }}>โพสของ {profile.displayName}</p>
+                <p style={{ color: '#8e8e8e', fontSize: '0.85rem' }}>เพิ่มเป็นเพื่อนเพื่อดูโพส</p>
               </div>
             )}
+          </div>
+        </>
+      )}
 
-            {/* Not friend — blurred hint */}
-            {!canSeePosts && (
-              <div className="text-center py-12"
-                style={{ background: 'white', borderRadius: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-                <div className="text-4xl mb-3">🔒</div>
-                <p className="font-bold text-slate-600 mb-1">โพสของ {profile.displayName}</p>
-                <p style={{ fontSize: '0.85rem', color: '#b0a8bc' }}>เพิ่มเป็นเพื่อนเพื่อดูโพส</p>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {selectedPost && userProfile && (
+        <PostModal
+          post={selectedPost}
+          currentUser={currentUser}
+          userProfile={userProfile}
+          onClose={() => setSelectedPost(null)}
+        />
+      )}
     </div>
   );
 }

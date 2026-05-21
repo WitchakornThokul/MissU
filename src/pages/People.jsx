@@ -107,29 +107,27 @@ export default function People() {
   ];
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg,#fdf4ff 0%,#f4eef8 100%)', paddingBottom: 90 }}>
+    <div className="min-h-screen" style={{ background: '#fafafa', paddingBottom: 80 }}>
       <Navbar />
       <div className="max-w-lg mx-auto px-4 py-5">
 
         {/* Header */}
-        <div className="mb-5">
-          <h1 className="font-bold text-slate-800" style={{ fontSize: '1.25rem' }}>คนรู้จัก</h1>
-          <p style={{ fontSize: '0.78rem', color: '#b0a8bc', marginTop: 2 }}>ค้นหาและเพิ่มเพื่อนในระบบ</p>
+        <div className="mb-4">
+          <h1 style={{ fontWeight: 800, fontSize: '1.3rem', color: '#111' }}>คนรู้จัก</h1>
         </div>
 
         {/* Tabs — bigger, easier to tap */}
-        <div className="flex gap-2 mb-5 p-1.5 rounded-3xl" style={{ background: '#ece4f0' }}>
+        <div className="flex gap-0 mb-4" style={{ background: '#fff', borderRadius: 10, border: '1px solid #dbdbdb', overflow: 'hidden' }}>
           {TABS.map(({ id, label, Icon, badge }) => {
             const isActive = tab === id;
             return (
               <button key={id} onClick={() => setTab(id)}
                 className="flex-1 flex flex-col items-center justify-center gap-1 transition-all active:scale-95"
                 style={{
-                  padding: '10px 8px',
-                  borderRadius: 18,
-                  background: isActive ? 'white' : 'transparent',
-                  color: isActive ? '#e8637a' : '#a09ab0',
-                  boxShadow: isActive ? '0 3px 12px rgba(232,99,122,0.15)' : 'none',
+                  padding: '11px 8px',
+                  background: isActive ? '#fff' : 'transparent',
+                  color: isActive ? '#111' : '#8e8e8e',
+                  borderBottom: isActive ? '2px solid #111' : '2px solid transparent',
                   position: 'relative',
                 }}>
                 <div className="relative">
@@ -189,7 +187,7 @@ export default function People() {
                   const status = statusMap[user.uid] || 'none';
                   return (
                     <div key={user.uid}
-                      style={{ background: 'white', borderRadius: 20, padding: '14px 16px', boxShadow: '0 2px 12px rgba(244,63,94,0.05)', display: 'flex', alignItems: 'center', gap: 14 }}>
+                      style={{ background: '#fff', borderRadius: 14, padding: '12px 14px', border: '1px solid #efefef', display: 'flex', alignItems: 'center', gap: 12 }}>
                       <Link to={`/profile/${user.uid}`} className="flex-shrink-0">
                         <Avatar user={user} size={56} />
                       </Link>
@@ -263,7 +261,7 @@ export default function People() {
                 </p>
                 {incomingFriendReqs.map(req => (
                   <div key={req.id}
-                    style={{ background: 'white', borderRadius: 20, padding: '16px', boxShadow: '0 2px 12px rgba(244,63,94,0.05)' }}>
+                    style={{ background: '#fff', borderRadius: 14, padding: '14px', border: '1px solid #efefef' }}>
                     <div className="flex items-center gap-4 mb-4">
                       <Link to={`/profile/${req.fromUid}`} className="flex-shrink-0">
                         <Avatar user={{ photoURL: req.fromPhoto, avatarEmoji: req.fromEmoji }} size={58} />
@@ -322,7 +320,7 @@ export default function People() {
                 <div className="space-y-3">
                   {friends.map(friend => (
                     <div key={friend.uid}
-                      style={{ background: 'white', borderRadius: 20, padding: '14px 16px', boxShadow: '0 2px 12px rgba(244,63,94,0.05)', display: 'flex', alignItems: 'center', gap: 14 }}>
+                      style={{ background: '#fff', borderRadius: 14, padding: '12px 14px', border: '1px solid #efefef', display: 'flex', alignItems: 'center', gap: 12 }}>
                       <Link to={`/profile/${friend.uid}`} className="flex-shrink-0">
                         <Avatar user={friend} size={56} />
                       </Link>

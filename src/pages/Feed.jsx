@@ -8,18 +8,29 @@ import {
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
-import { FiHeart, FiMessageCircle, FiImage, FiSend, FiTrash2, FiX, FiEdit3 } from 'react-icons/fi';
+import { FiHeart, FiMessageCircle, FiImage, FiSend, FiEdit3 } from 'react-icons/fi';
 
-
-function Avatar({ user, size = 40 }) {
-  if (user?.photoURL) return (
-    <img src={user.photoURL} alt="" className="rounded-full object-cover flex-shrink-0"
-      style={{ width: size, height: size }} />
+/* ── Story-ring avatar ── */
+function Avatar({ user, size = 32, ring = false }) {
+  const inner = user?.photoURL
+    ? <img src={user.photoURL} alt=""
+        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%',
+          border: ring ? '2.5px solid #fff' : 'none' }} />
+    : <div style={{ width: '100%', height: '100%', borderRadius: '50%',
+        background: 'linear-gradient(135deg,#f43f5e,#a855f7)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: size * 0.4, border: ring ? '2.5px solid #fff' : 'none' }}>
+        {user?.avatarEmoji || '💕'}
+      </div>;
+  if (!ring) return (
+    <div style={{ width: size, height: size, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+      {inner}
+    </div>
   );
   return (
-    <div className="rounded-full flex items-center justify-center flex-shrink-0 text-white"
-      style={{ width: size, height: size, background: 'linear-gradient(135deg,#f43f5e,#a855f7)', fontSize: size * 0.4 }}>
-      {user?.avatarEmoji || '💕'}
+    <div style={{ width: size + 6, height: size + 6, borderRadius: '50%', flexShrink: 0,
+      background: 'linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)', padding: 2.5 }}>
+      {inner}
     </div>
   );
 }
@@ -34,7 +45,7 @@ function timeAgo(ts) {
   return `${Math.floor(d / 86400)} วันที่แล้ว`;
 }
 
-/* ── Comments — MemoryWall style ── */
+/* ── IG-style comment section ── */
 function CommentSection({ postId, currentUser, userProfile }) {
   const [comments, setComments] = useState([]);
   const [text, setText] = useState('');
@@ -68,68 +79,42 @@ function CommentSection({ postId, currentUser, userProfile }) {
   }
 
   return (
-    <div style={{ borderTop: '1px solid #f0f0f0', padding: '14px 16px 16px' }}>
-
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
-        <FiMessageCircle size={15} color="#9ca3af" />
-        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#6b7280' }}>
-          ความคิดเห็น ({comments.length})
-        </span>
-      </div>
-
-      {/* Comment list — MemoryWall style */}
-      {comments.length > 0 && (
-        <div className="space-y-2.5 mb-4">
-          {comments.map(c => (
-            <div key={c.id} className="flex gap-2">
-              {c.authorPhoto ? (
-                <img src={c.authorPhoto} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
-              ) : (
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)', color: 'white' }}>
-                  {c.authorEmoji || '💕'}
-                </div>
-              )}
-              <div className="flex-1 rounded-2xl px-3 py-2" style={{ background: '#f9fafb' }}>
-                <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>{c.authorName}</p>
-                <p style={{ fontSize: '0.88rem', color: '#4b5563', lineHeight: 1.45, marginTop: 2 }}>{c.text}</p>
-              </div>
-            </div>
-          ))}
+    <div style={{ borderTop: '1px solid #efefef', padding: '10px 14px 14px' }}>
+      {comments.map(c => (
+        <div key={c.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
+          {c.authorPhoto
+            ? <img src={c.authorPhoto} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+            : <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'linear-gradient(135deg,#f43f5e,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', color: 'white', flexShrink: 0 }}>{c.authorEmoji}</div>
+          }
+          <p style={{ fontSize: '0.86rem', color: '#111', lineHeight: 1.45, flex: 1 }}>
+            <strong>{c.authorName}</strong>{' '}{c.text}
+          </p>
         </div>
-      )}
-
-      {/* Input */}
-      <form onSubmit={send} className="flex gap-2 items-center">
-        <Avatar user={userProfile} size={32} />
+      ))}
+      <form onSubmit={send} style={{ display: 'flex', gap: 8, alignItems: 'center',
+        borderTop: comments.length ? '1px solid #efefef' : 'none',
+        paddingTop: comments.length ? 8 : 0, marginTop: comments.length ? 4 : 0 }}>
+        <Avatar user={userProfile} size={26} />
         <input
           ref={inputRef}
           value={text}
           onChange={e => setText(e.target.value)}
-          placeholder="เขียนความคิดเห็น..."
-          className="flex-1 outline-none"
-          style={{
-            background: '#f3f4f6',
-            border: '1.5px solid #e5e7eb',
-            borderRadius: 99,
-            padding: '8px 16px',
-            color: '#1f2937',
-            fontSize: '0.85rem',
-          }}
+          placeholder="เพิ่มความคิดเห็น..."
+          style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: '0.88rem', color: '#111' }}
           maxLength={500}
         />
-        <button type="submit" disabled={!text.trim() || sending}
-          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white transition-all active:scale-90"
-          style={{ background: text.trim() ? 'linear-gradient(135deg,#f43f5e,#a855f7)' : '#e5e7eb' }}>
-          <FiSend size={14} />
-        </button>
+        {text.trim() && (
+          <button type="submit" disabled={sending}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem', color: '#e8637a' }}>
+            โพส
+          </button>
+        )}
       </form>
     </div>
   );
 }
 
-/* ── Post Card ── */
+/* ── IG-style Post Card ── */
 function PostCard({ post, currentUser, userProfile }) {
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
@@ -158,100 +143,77 @@ function PostCard({ post, currentUser, userProfile }) {
   }
 
   return (
-    <div className="overflow-hidden"
-      style={{
-        background: 'white',
-        borderRadius: 20,
-        boxShadow: '0 2px 20px rgba(244,63,94,0.07), 0 1px 4px rgba(0,0,0,0.04)',
-      }}>
+    <div style={{ background: '#fff', borderBottom: '1px solid #efefef' }}>
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-3">
-        <Link to={`/profile/${post.authorId}`} className="flex-shrink-0">
-          <Avatar user={{ photoURL: post.authorPhoto, avatarEmoji: post.authorEmoji }} size={44} />
+      <div style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', gap: 10 }}>
+        <Link to={`/profile/${post.authorId}`} style={{ flexShrink: 0 }}>
+          <Avatar user={{ photoURL: post.authorPhoto, avatarEmoji: post.authorEmoji }} size={34} ring />
         </Link>
-        <div className="flex-1 min-w-0">
-          <Link to={`/profile/${post.authorId}`}>
-            <p className="font-bold text-slate-800 leading-tight" style={{ fontSize: '0.93rem' }}>{post.authorName}</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Link to={`/profile/${post.authorId}`} style={{ textDecoration: 'none' }}>
+            <p style={{ fontWeight: 700, color: '#111', fontSize: '0.88rem', lineHeight: 1.2 }}>{post.authorName}</p>
           </Link>
-          <p style={{ fontSize: '0.72rem', color: '#b0a8bc', marginTop: 2 }}>{timeAgo(post.createdAt)}</p>
+          <p style={{ fontSize: '0.7rem', color: '#8e8e8e' }}>{timeAgo(post.createdAt)}</p>
         </div>
         {isOwn && (
           <button onClick={deletePost}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-red-50 active:scale-90"
-            style={{ color: '#e0d0e8' }}>
-            <FiTrash2 size={14} />
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8e8e8e', fontSize: '1.3rem', padding: '0 4px', letterSpacing: 2, lineHeight: 1 }}>
+            ···
           </button>
         )}
       </div>
 
-      {/* Text */}
-      {post.text && (
-        <p className="px-4 pb-3 text-slate-700 leading-relaxed"
-          style={{ fontSize: '0.92rem' }}>
-          {post.text}
-        </p>
-      )}
-
-      {/* Image */}
+      {/* Image — full width, double-tap to like */}
       {post.imageUrl && (
-        <div className="px-3 pb-3">
-          <img src={post.imageUrl} alt=""
-            className="w-full object-cover"
-            style={{ borderRadius: 14, maxHeight: 380 }}
-          />
-        </div>
+        <img src={post.imageUrl}
+          onDoubleClick={toggleLike}
+          style={{ width: '100%', display: 'block', maxHeight: 500, objectFit: 'cover' }}
+        />
       )}
 
-      {/* Stats row */}
-      {(likeCount > 0 || commentCount > 0) && (
-        <div className="flex items-center justify-between px-4 pb-2" style={{ gap: 8 }}>
-          {likeCount > 0 && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-5 h-5 rounded-full flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)' }}>
-                <FiHeart size={10} fill="white" color="white" />
-              </div>
-              <span style={{ fontSize: '0.78rem', color: '#9ca3af', fontWeight: 600 }}>{likeCount}</span>
-            </div>
-          )}
-          {commentCount > 0 && (
-            <button onClick={() => setShowComments(p => !p)}
-              className="ml-auto"
-              style={{ fontSize: '0.78rem', color: '#b0a8bc', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>
-              {commentCount} ความคิดเห็น
-            </button>
-          )}
+      {/* Actions */}
+      <div style={{ padding: '8px 12px 2px' }}>
+        <div style={{ display: 'flex', gap: 14, marginBottom: 6, alignItems: 'center' }}>
+          <button onClick={toggleLike} disabled={liking}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
+            <FiHeart
+              size={24}
+              fill={liked ? '#ed4956' : 'none'}
+              color={liked ? '#ed4956' : '#111'}
+              strokeWidth={liked ? 0 : 2}
+              style={{ transition: 'transform 0.1s', transform: liked ? 'scale(1.12)' : 'scale(1)' }}
+            />
+          </button>
+          <button onClick={() => setShowComments(p => !p)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
+            <FiMessageCircle size={23} color={showComments ? '#e8637a' : '#111'} strokeWidth={2} />
+          </button>
         </div>
-      )}
 
-      {/* Divider */}
-      <div style={{ height: 1, background: '#f5f0fa', margin: '0 16px' }} />
+        {likeCount > 0 && (
+          <p style={{ fontWeight: 700, fontSize: '0.88rem', color: '#111', marginBottom: 4 }}>
+            {likeCount.toLocaleString()} ถูกใจ
+          </p>
+        )}
 
-      {/* Action buttons */}
-      <div className="flex items-center px-2 py-1">
-        <button onClick={toggleLike} disabled={liking}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl font-semibold transition-all active:scale-95"
-          style={{ color: liked ? '#f43f5e' : '#c4b8d0', fontSize: '0.85rem' }}>
-          <FiHeart
-            size={18}
-            fill={liked ? '#f43f5e' : 'none'}
-            color={liked ? '#f43f5e' : '#c4b8d0'}
-            strokeWidth={liked ? 0 : 2}
-            style={{ transition: 'transform 0.15s', transform: liked ? 'scale(1.15)' : 'scale(1)' }}
-          />
-          ถูกใจ
-        </button>
-        <div style={{ width: 1, height: 20, background: '#f0e8f5', flexShrink: 0 }} />
-        <button onClick={() => setShowComments(p => !p)}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl font-semibold transition-all active:scale-95"
-          style={{ color: showComments ? '#a855f7' : '#c4b8d0', fontSize: '0.85rem' }}>
-          <FiMessageCircle size={18} color={showComments ? '#a855f7' : '#c4b8d0'} />
-          คอมเมนต์
-        </button>
+        {post.text && (
+          <p style={{ fontSize: '0.88rem', color: '#111', lineHeight: 1.5, marginBottom: 4 }}>
+            <strong>{post.authorName}</strong>{' '}{post.text}
+          </p>
+        )}
+
+        {commentCount > 0 && !showComments && (
+          <button onClick={() => setShowComments(true)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#8e8e8e', fontSize: '0.84rem', display: 'block', marginBottom: 2 }}>
+            ดูความคิดเห็นทั้งหมด {commentCount} รายการ
+          </button>
+        )}
+        <p style={{ fontSize: '0.7rem', color: '#c7c7c7', marginTop: 2, marginBottom: 6 }}>
+          {timeAgo(post.createdAt)}
+        </p>
       </div>
 
-      {/* Comments */}
       {showComments && (
         <CommentSection postId={post.id} currentUser={currentUser} userProfile={userProfile} />
       )}
@@ -259,7 +221,7 @@ function PostCard({ post, currentUser, userProfile }) {
   );
 }
 
-/* ── Create Post Box ── */
+/* ── Create Post ── */
 function CreatePostBox({ currentUser, userProfile }) {
   const [text, setNewText] = useState('');
   const [image, setImage] = useState(null);
@@ -267,7 +229,6 @@ function CreatePostBox({ currentUser, userProfile }) {
   const [posting, setPosting] = useState(false);
   const [focused, setFocused] = useState(false);
   const fileRef = useRef(null);
-  const textRef = useRef(null);
 
   const expanded = focused || !!text || !!preview;
 
@@ -329,91 +290,66 @@ function CreatePostBox({ currentUser, userProfile }) {
   const canPost = (text.trim() || image) && !posting;
 
   return (
-    <div style={{
-      background: 'white',
-      borderRadius: 20,
-      boxShadow: '0 2px 20px rgba(244,63,94,0.07), 0 1px 4px rgba(0,0,0,0.04)',
-      overflow: 'hidden',
-    }}>
-      {/* Gradient top stripe */}
-      <div style={{ height: 4, background: 'linear-gradient(90deg,#f43f5e,#a855f7,#6366f1)' }} />
+    <div style={{ background: '#fff', borderBottom: '1px solid #efefef', padding: '12px 14px' }}>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <Avatar user={userProfile} size={36} ring />
+        <div style={{ flex: 1 }}>
+          <textarea
+            value={text}
+            onChange={e => setNewText(e.target.value)}
+            onFocus={() => setFocused(true)}
+            placeholder="แชร์ความรู้สึกหรือรูปภาพ..."
+            rows={expanded ? 3 : 1}
+            style={{
+              width: '100%', background: 'none', border: 'none', outline: 'none',
+              fontSize: '0.92rem', color: '#111', resize: 'none',
+              lineHeight: 1.55, padding: '4px 0',
+              minHeight: expanded ? 64 : 32,
+            }}
+            maxLength={1000}
+          />
 
-      <div className="p-4">
-        <div className="flex gap-3 items-start">
-          <Avatar user={userProfile} size={42} />
-          <div className="flex-1">
-            <textarea
-              ref={textRef}
-              value={text}
-              onChange={e => setNewText(e.target.value)}
-              onFocus={() => setFocused(true)}
-              placeholder={`${userProfile?.displayName || 'คุณ'} อยากเล่าอะไร?`}
-              rows={expanded ? 3 : 1}
-              className="w-full outline-none resize-none transition-all"
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#1f2937',
-                fontSize: '0.92rem',
-                lineHeight: 1.55,
-                minHeight: expanded ? 72 : 40,
-                padding: '8px 0',
-              }}
-              maxLength={1000}
-            />
-          </div>
-        </div>
-
-        {/* Image preview */}
-        {preview && (
-          <div className="relative mt-2 rounded-2xl overflow-hidden"
-            style={{ border: '2px solid #f0e8f8' }}>
-            <img src={preview} alt="" className="w-full object-cover" style={{ maxHeight: 220 }} />
-            <button type="button" onClick={removeImage}
-              className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center text-white"
-              style={{ background: 'rgba(0,0,0,0.5)' }}>
-              <FiX size={14} />
-            </button>
-          </div>
-        )}
-
-        {/* Divider + actions */}
-        {expanded && (
-          <>
-            <div style={{ height: 1, background: '#f5f0fa', margin: '12px 0' }} />
-            <div className="flex items-center justify-between">
-              <button type="button" onClick={() => fileRef.current?.click()}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all active:scale-95"
-                style={{ color: '#a855f7', fontSize: '0.82rem', fontWeight: 600, background: '#faf5ff' }}>
-                <FiImage size={16} />
-                รูปภาพ
+          {preview && (
+            <div style={{ position: 'relative', marginTop: 8, borderRadius: 10, overflow: 'hidden', border: '1px solid #efefef' }}>
+              <img src={preview} style={{ width: '100%', objectFit: 'cover', maxHeight: 200, display: 'block' }} />
+              <button type="button" onClick={removeImage}
+                style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: '50%', background: 'rgba(0,0,0,0.55)', color: 'white', border: 'none', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                ×
               </button>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
+            </div>
+          )}
 
-              <div className="flex items-center gap-2">
+          {expanded && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, borderTop: '1px solid #efefef', paddingTop: 10 }}>
+              <button type="button" onClick={() => fileRef.current?.click()}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: '#8e8e8e', fontSize: '0.84rem', fontWeight: 600 }}>
+                <FiImage size={18} /> รูปภาพ
+              </button>
+              <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImage} />
+              <div style={{ display: 'flex', gap: 8 }}>
                 {(text || preview) && (
-                  <button type="button"
-                    onClick={() => { setNewText(''); removeImage(); setFocused(false); }}
-                    className="px-3 py-2 rounded-xl font-semibold transition-all"
-                    style={{ fontSize: '0.82rem', color: '#b0a8bc', background: '#f8f4fb' }}>
+                  <button type="button" onClick={() => { setNewText(''); removeImage(); setFocused(false); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8e8e8e', fontSize: '0.84rem', fontWeight: 600 }}>
                     ยกเลิก
                   </button>
                 )}
                 <button onClick={handlePost} disabled={!canPost}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-white transition-all active:scale-95"
                   style={{
-                    background: canPost ? 'linear-gradient(135deg,#f43f5e,#a855f7)' : '#e5e7eb',
-                    fontSize: '0.85rem',
-                    boxShadow: canPost ? '0 4px 14px rgba(244,63,94,0.3)' : 'none',
+                    background: canPost ? 'linear-gradient(135deg,#f43f5e,#a855f7)' : '#efefef',
+                    color: canPost ? 'white' : '#8e8e8e',
+                    border: 'none', cursor: canPost ? 'pointer' : 'default',
+                    borderRadius: 20, padding: '6px 18px',
+                    fontWeight: 700, fontSize: '0.84rem',
+                    display: 'flex', alignItems: 'center', gap: 6,
                   }}>
                   {posting
-                    ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin-slow" />
-                    : <><FiEdit3 size={14} /> โพส</>}
+                    ? <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', animation: 'spin 0.8s linear infinite' }} />
+                    : 'โพส'}
                 </button>
               </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
@@ -453,48 +389,37 @@ export default function Feed() {
   }, [currentUser, friendUids]);
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg,#fdf4ff 0%,#f4eef8 100%)', paddingBottom: 90 }}>
+    <div style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: 80 }}>
       <Navbar />
 
-      <div className="max-w-lg mx-auto px-4 py-5">
+      {/* Mobile top bar */}
+      <div className="md:hidden sticky top-0 z-30"
+        style={{ background: '#fff', borderBottom: '1px solid #dbdbdb', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontWeight: 800, fontSize: '1.4rem', fontFamily: "'Nunito',sans-serif", color: '#111' }}>MissU</span>
+        <FiEdit3 size={22} color="#111" strokeWidth={1.8} />
+      </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h1 className="font-bold text-slate-800" style={{ fontSize: '1.25rem' }}>ฟีด</h1>
-            <p style={{ fontSize: '0.78rem', color: '#b0a8bc', marginTop: 1 }}>โพสของคุณและเพื่อน</p>
-          </div>
-          <div className="w-9 h-9 rounded-2xl flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)' }}>
-            <FiEdit3 size={16} color="white" />
-          </div>
-        </div>
+      <div style={{ maxWidth: 600, margin: '0 auto' }}>
 
         {/* Create Post */}
         {userProfile && (
-          <div className="mb-5">
-            <CreatePostBox currentUser={currentUser} userProfile={userProfile} />
-          </div>
+          <CreatePostBox currentUser={currentUser} userProfile={userProfile} />
         )}
 
-        {/* Posts */}
         {loading ? (
-          <div className="flex justify-center py-24">
-            <div className="w-8 h-8 border-2 border-rose-200 border-t-rose-400 rounded-full animate-spin-slow" />
+          <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 60 }}>
+            <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid #dbdbdb', borderTopColor: '#111', animation: 'spin 0.8s linear infinite' }} />
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-16"
-            style={{ background: 'white', borderRadius: 20, boxShadow: '0 2px 20px rgba(244,63,94,0.07)' }}>
-            <div className="text-5xl mb-4">✨</div>
-            <p className="font-bold text-slate-700 mb-2">ยังไม่มีโพส</p>
-            <p className="text-slate-400" style={{ fontSize: '0.85rem' }}>เพิ่มเพื่อนแล้วโพสอะไรสักอย่าง</p>
+          <div style={{ textAlign: 'center', padding: '60px 24px', background: '#fff', borderBottom: '1px solid #efefef' }}>
+            <div style={{ fontSize: '3rem', marginBottom: 12 }}>✨</div>
+            <p style={{ fontWeight: 700, color: '#111', fontSize: '1rem', marginBottom: 6 }}>ยังไม่มีโพส</p>
+            <p style={{ color: '#8e8e8e', fontSize: '0.88rem' }}>เพิ่มเพื่อนแล้วโพสอะไรสักอย่าง</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {posts.map(post => (
-              <PostCard key={post.id} post={post} currentUser={currentUser} userProfile={userProfile} />
-            ))}
-          </div>
+          posts.map(post => (
+            <PostCard key={post.id} post={post} currentUser={currentUser} userProfile={userProfile} />
+          ))
         )}
 
       </div>
