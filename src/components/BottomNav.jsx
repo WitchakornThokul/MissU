@@ -28,7 +28,7 @@ export default function BottomNav() {
   const TABS = [
     { to: '/dashboard', label: 'หน้าหลัก', Icon: FiHome },
     { to: '/feed',      label: 'ฟีด',      Icon: FiRss },
-    { to: '/chat',      label: 'แชท',      Icon: FiMessageCircle, locked: !hasPartner },
+    { to: '/chat',      label: 'แชท',      Icon: FiMessageCircle },
     { to: '/people',    label: 'คนรู้จัก', Icon: FiUsers, badge: friendReqCount },
     { to: '/profile',   label: 'โปรไฟล์',  Icon: FiUser },
   ];

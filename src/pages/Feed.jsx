@@ -10,15 +10,6 @@ import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import { FiHeart, FiMessageCircle, FiImage, FiSend, FiTrash2, FiX, FiEdit3 } from 'react-icons/fi';
 
-/* ── Pastel palette (memory-wall style) ── */
-const COMMENT_PALETTES = [
-  { bg: '#fff1f3', border: '#fda4af', name: '#e8637a' },
-  { bg: '#f3e8ff', border: '#d8b4fe', name: '#a855f7' },
-  { bg: '#eff6ff', border: '#93c5fd', name: '#3b82f6' },
-  { bg: '#ecfdf5', border: '#6ee7b7', name: '#10b981' },
-  { bg: '#fff7ed', border: '#fcd34d', name: '#f97316' },
-  { bg: '#fdf4ff', border: '#f0abfc', name: '#d946ef' },
-];
 
 function Avatar({ user, size = 40 }) {
   if (user?.photoURL) return (
@@ -43,7 +34,7 @@ function timeAgo(ts) {
   return `${Math.floor(d / 86400)} วันที่แล้ว`;
 }
 
-/* ── Comments — memory-wall pastel card style ── */
+/* ── Comments — MemoryWall style ── */
 function CommentSection({ postId, currentUser, userProfile }) {
   const [comments, setComments] = useState([]);
   const [text, setText] = useState('');
@@ -77,46 +68,62 @@ function CommentSection({ postId, currentUser, userProfile }) {
   }
 
   return (
-    <div style={{ borderTop: '1px solid #f0eaf6', padding: '14px 16px 16px' }}>
+    <div style={{ borderTop: '1px solid #f0f0f0', padding: '14px 16px 16px' }}>
 
-      {/* Comment list — pastel memory cards */}
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-3">
+        <FiMessageCircle size={15} color="#9ca3af" />
+        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#6b7280' }}>
+          ความคิดเห็น ({comments.length})
+        </span>
+      </div>
+
+      {/* Comment list — MemoryWall style */}
       {comments.length > 0 && (
-        <div className="space-y-2 mb-4">
-          {comments.map((c, i) => {
-            const pal = COMMENT_PALETTES[i % COMMENT_PALETTES.length];
-            return (
-              <div key={c.id} className="rounded-2xl px-4 py-3"
-                style={{ background: pal.bg, border: `1.5px solid ${pal.border}40`, boxShadow: '0 1px 6px rgba(0,0,0,0.04)' }}>
-                <p className="font-bold mb-0.5" style={{ fontSize: '0.78rem', color: pal.name }}>
-                  {c.authorName}
-                </p>
-                <p className="text-slate-600 leading-snug" style={{ fontSize: '0.85rem' }}>{c.text}</p>
+        <div className="space-y-2.5 mb-4">
+          {comments.map(c => (
+            <div key={c.id} className="flex gap-2">
+              {c.authorPhoto ? (
+                <img src={c.authorPhoto} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0"
+                  style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)', color: 'white' }}>
+                  {c.authorEmoji || '💕'}
+                </div>
+              )}
+              <div className="flex-1 rounded-2xl px-3 py-2" style={{ background: '#f9fafb' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>{c.authorName}</p>
+                <p style={{ fontSize: '0.88rem', color: '#4b5563', lineHeight: 1.45, marginTop: 2 }}>{c.text}</p>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
 
       {/* Input */}
       <form onSubmit={send} className="flex gap-2 items-center">
         <Avatar user={userProfile} size={32} />
-        <div className="flex-1 flex items-center gap-2 rounded-2xl px-4 py-2"
-          style={{ background: '#f8f4fb', border: '1.5px solid #ede5f5' }}>
-          <input
-            ref={inputRef}
-            value={text}
-            onChange={e => setText(e.target.value)}
-            placeholder="เขียนความคิดเห็น..."
-            className="flex-1 outline-none bg-transparent"
-            style={{ color: '#1f2937', fontSize: '0.85rem', border: 'none' }}
-            maxLength={500}
-          />
-          <button type="submit" disabled={!text.trim() || sending}
-            className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-white transition-all active:scale-90"
-            style={{ background: text.trim() ? 'linear-gradient(135deg,#f43f5e,#a855f7)' : '#e5e7eb' }}>
-            <FiSend size={12} />
-          </button>
-        </div>
+        <input
+          ref={inputRef}
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="เขียนความคิดเห็น..."
+          className="flex-1 outline-none"
+          style={{
+            background: '#f3f4f6',
+            border: '1.5px solid #e5e7eb',
+            borderRadius: 99,
+            padding: '8px 16px',
+            color: '#1f2937',
+            fontSize: '0.85rem',
+          }}
+          maxLength={500}
+        />
+        <button type="submit" disabled={!text.trim() || sending}
+          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white transition-all active:scale-90"
+          style={{ background: text.trim() ? 'linear-gradient(135deg,#f43f5e,#a855f7)' : '#e5e7eb' }}>
+          <FiSend size={14} />
+        </button>
       </form>
     </div>
   );

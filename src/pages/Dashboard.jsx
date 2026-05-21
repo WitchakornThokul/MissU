@@ -105,7 +105,7 @@ function CoupleSidebar({ userProfile, partnerProfile, isLocal, days, quote, quot
                   style={{background:'#fff0f3', color:'#e8637a', border:'1.5px solid rgba(232,99,122,.2)'}}>
                   👤 โปรไฟล์
                 </Link>
-                <Link to="/chat"
+                <Link to="/chat/partner"
                   className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl font-bold text-sm transition-all hover:opacity-90"
                   style={{background:'linear-gradient(135deg,#e8637a,#1da0bc)', color:'white'}}>
                   <FiMessageCircle size={15}/> แชท
@@ -224,7 +224,7 @@ export default function Dashboard() {
           borderBottom:'1px solid #f0f0f0',
         }}>
         <span className="font-display font-bold text-xl text-gradient">MissU</span>
-        <Link to="/chat"
+        <Link to="/chat/partner"
           className="w-9 h-9 flex items-center justify-center rounded-full"
           style={{background:'#fff0f3'}}>
           <FiMessageCircle size={20} color="#e8637a" strokeWidth={2}/>
@@ -295,7 +295,7 @@ export default function Dashboard() {
                       style={{background:'#fff0f3', color:'#e8637a'}}>
                       👤 โปรไฟล์
                     </Link>
-                    <Link to="/chat"
+                    <Link to="/chat/partner"
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl font-bold text-sm text-white"
                       style={{background:'linear-gradient(135deg,#e8637a,#1da0bc)'}}>
                       <FiMessageCircle size={15}/> แชท
