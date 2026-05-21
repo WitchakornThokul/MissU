@@ -142,9 +142,11 @@ export default function LoveQuiz() {
               {myAnswersSaved && (
                 <p className="text-xs text-green-500 font-medium">✓ คู่รักสามารถทายคำตอบคุณได้แล้ว!</p>
               )}
-              {partnerAnswers && (
-                <p className="text-xs text-indigo-500 font-medium">✓ คู่รักตอบคำถามแล้ว พร้อมทายได้เลย!</p>
-              {partnerData && <p className="text-xs text-gray-400 mt-1">ชุดคำถาม #{(partnerData.setIndex ?? 0) + 1}</p>}
+              {partnerData && (
+                <>
+                  <p className="text-xs text-indigo-500 font-medium">✓ คู่รักตอบคำถามแล้ว พร้อมทายได้เลย!</p>
+                  <p className="text-xs text-gray-400 mt-1">ชุดคำถาม #{(partnerData.setIndex ?? 0) + 1}</p>
+                </>
               )}
             </div>
           </div>
