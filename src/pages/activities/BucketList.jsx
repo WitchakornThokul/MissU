@@ -67,7 +67,18 @@ export default function BucketList() {
   }
 
   async function toggle(item) {
-    await updateDoc(doc(db, 'couples', coupleId, 'bucketItems', item.id), { done: !item.done });
+    const checkedBy = item.checkedBy || {};
+    const myUid = currentUser.uid;
+    const partnerUid = userProfile?.partnerId;
+    const iChecked = !!checkedBy[myUid];
+    const newCheckedBy = { ...checkedBy, [myUid]: !iChecked };
+    const bothDone = partnerUid
+      ? !!newCheckedBy[myUid] && !!newCheckedBy[partnerUid]
+      : !!newCheckedBy[myUid];
+    await updateDoc(doc(db, 'couples', coupleId, 'bucketItems', item.id), {
+      checkedBy: newCheckedBy,
+      done: bothDone,
+    });
   }
 
   async function remove(id) {
@@ -105,23 +116,47 @@ export default function BucketList() {
           </div>
         ) : (
           <div className="space-y-3">
-            {items.map(item => (
+            {items.map(item => {
+              const checkedBy = item.checkedBy || {};
+              const myUid = currentUser.uid;
+              const partnerUid = userProfile?.partnerId;
+              const iChecked = !!checkedBy[myUid];
+              const partnerChecked = partnerUid ? !!checkedBy[partnerUid] : false;
+              return (
               <div key={item.id}
                 className="bg-white rounded-2xl px-5 py-4 flex items-center gap-3 transition-all"
                 style={{ border: '1px solid rgba(251,146,60,0.2)', opacity: item.done ? 0.65 : 1, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
                 <button onClick={() => toggle(item)}
                   className="w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
-                  style={{ background: item.done ? 'linear-gradient(135deg,#22c55e,#16a34a)' : 'transparent', borderColor: item.done ? 'transparent' : '#fed7aa', color: 'white' }}>
-                  {item.done && <FiCheck size={13} strokeWidth={3} />}
+                  style={{
+                    background: item.done ? 'linear-gradient(135deg,#22c55e,#16a34a)' : iChecked ? '#fff7ed' : 'transparent',
+                    borderColor: item.done ? 'transparent' : iChecked ? '#f97316' : '#fed7aa',
+                    color: item.done ? 'white' : '#f97316'
+                  }}>
+                  {(item.done || iChecked) && <FiCheck size={13} strokeWidth={3} />}
                 </button>
-                <span className={`flex-1 font-medium text-sm ${item.done ? 'line-through text-gray-400' : 'text-gray-700'}`}>
-                  {item.text}
-                </span>
-                <button onClick={() => remove(item.id)} className="text-gray-200 hover:text-rose-400 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <span className={`font-medium text-sm ${item.done ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                    {item.text}
+                  </span>
+                  {!item.done && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs" style={{ color: iChecked ? '#22c55e' : '#d1d5db' }}>
+                        {iChecked ? '✓ ฉัน' : '○ ฉัน'}
+                      </span>
+                      <span className="text-xs text-gray-200">·</span>
+                      <span className="text-xs" style={{ color: partnerChecked ? '#22c55e' : '#d1d5db' }}>
+                        {partnerChecked ? `✓ ${partnerProfile?.displayName || 'คู่รัก'}` : `○ ${partnerProfile?.displayName || 'คู่รัก'}`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <button onClick={() => remove(item.id)} className="text-gray-200 hover:text-rose-400 transition-colors flex-shrink-0">
                   <FiTrash2 size={15} />
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

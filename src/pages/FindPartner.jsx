@@ -104,7 +104,7 @@ export default function FindPartner() {
   }
 
   // ── Already has partner ───────────────────────────────────────
-  if (userProfile?.partnerId && partnerProfile) {
+  if (userProfile?.partnerId) {
     return (
       <div className="min-h-screen" style={{background:'#f8f5f7'}}>
         <Navbar/>

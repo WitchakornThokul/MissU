@@ -4,7 +4,24 @@ import Navbar from '../../components/Navbar';
 import PageHeader from '../../components/PageHeader';
 import { collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../../firebase/config';
-import { FiCamera, FiPlus, FiX, FiImage, FiTrash2, FiHeart, FiThumbsUp, FiSmile, FiMessageCircle, FiSend } from 'react-icons/fi';
+import { FiCamera, FiPlus, FiX, FiImage, FiTrash2, FiHeart, FiThumbsUp, FiSmile, FiMessageCircle, FiSend, FiZoomIn } from 'react-icons/fi';
+
+/* ── Lightbox ── */
+function Lightbox({ src, onClose }) {
+  if (!src) return null;
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <button onClick={onClose}
+        style={{ position: 'absolute', top: 16, right: 16, width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <FiX size={20} />
+      </button>
+      <img src={src} alt="" onClick={e => e.stopPropagation()}
+        style={{ maxWidth: '95vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: 12, boxShadow: '0 8px 40px rgba(0,0,0,0.5)' }} />
+    </div>
+  );
+}
 
 const IMGBB_KEY = import.meta.env.VITE_IMGBB_KEY;
 
@@ -61,7 +78,7 @@ function Modal({ show, onClose, title, children }) {
 }
 
 /* ── Memory Detail Modal ── */
-function MemoryDetailModal({ memory, onClose, coupleId, currentUser, userProfile }) {
+function MemoryDetailModal({ memory, onClose, coupleId, currentUser, userProfile, onViewImage }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [sending, setSending] = useState(false);
@@ -124,7 +141,12 @@ function MemoryDetailModal({ memory, onClose, coupleId, currentUser, userProfile
       <div className="space-y-4">
         {/* Image */}
         {memory.imageUrl && (
-          <img src={memory.imageUrl} alt="" className="w-full rounded-2xl" style={{ maxHeight: 320, objectFit: 'cover' }} />
+          <div className="relative cursor-pointer group" onClick={() => onViewImage(memory.imageUrl)}>
+            <img src={memory.imageUrl} alt="" className="w-full rounded-2xl" style={{ maxHeight: 320, objectFit: 'cover' }} />
+            <div className="absolute inset-0 rounded-2xl bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
+              <FiZoomIn size={28} color="white" className="opacity-0 group-hover:opacity-100 transition-all drop-shadow-lg" />
+            </div>
+          </div>
         )}
 
         {/* Title & Note */}
@@ -229,6 +251,7 @@ export default function MemoryWall() {
   const [form, setForm] = useState({ title: '', note: '', date: new Date().toISOString().split('T')[0] });
   const [showForm, setShowForm] = useState(false);
   const [selectedMemory, setSelectedMemory] = useState(null);
+  const [lightboxSrc, setLightboxSrc] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -416,7 +439,11 @@ export default function MemoryWall() {
         coupleId={coupleId}
         currentUser={currentUser}
         userProfile={userProfile}
+        onViewImage={src => { setSelectedMemory(null); setLightboxSrc(src); }}
       />
+
+      {/* Lightbox */}
+      <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
     </div>
   );
 }
