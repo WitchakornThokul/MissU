@@ -23,8 +23,6 @@ function Lightbox({ src, onClose }) {
   );
 }
 
-const IMGBB_KEY = import.meta.env.VITE_IMGBB_KEY;
-
 const CARD_STYLES = [
   { bg: '#fff1f3', border: '#fda4af' }, { bg: '#f3e8ff', border: '#d8b4fe' },
   { bg: '#ecfdf5', border: '#6ee7b7' }, { bg: '#eff6ff', border: '#93c5fd' },
@@ -45,13 +43,14 @@ async function uploadToImgBB(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-  const body = new FormData();
-  body.append('key', IMGBB_KEY);
-  body.append('image', base64);
-  const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body });
+  const res = await fetch('/api/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: base64 }),
+  });
   const json = await res.json();
-  if (!json.success) throw new Error(json.error?.message || 'Upload failed');
-  return json.data.url;
+  if (!res.ok) throw new Error(json.error || 'Upload failed');
+  return json.url;
 }
 
 /* ── Memory Detail Modal ── */
