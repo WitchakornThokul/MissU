@@ -236,7 +236,7 @@ function PostCard({ post, currentUser, userProfile }) {
 export default function ViewProfile() {
   const { uid } = useParams();
   const navigate = useNavigate();
-  const { currentUser, getFriendStatus, sendFriendRequest } = useAuth();
+  const { currentUser, userProfile, getFriendStatus, sendFriendRequest } = useAuth();
   const [profile, setProfile] = useState(null);
   const [partnerProfile, setPartnerProfile] = useState(null);
   const [posts, setPosts] = useState([]);
