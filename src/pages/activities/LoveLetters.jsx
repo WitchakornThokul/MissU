@@ -2,42 +2,41 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../../components/Navbar';
 import PageHeader from '../../components/PageHeader';
-import { collection, addDoc, query, getDocs, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
-const LS_KEY = 'missu_letters';
-
 export default function LoveLetters() {
-  const { currentUser, userProfile, isLocal } = useAuth();
+  const { currentUser, userProfile } = useAuth();
+  const coupleId = currentUser && userProfile?.partnerId
+    ? [currentUser.uid, userProfile.partnerId].sort().join('_') : null;
+
   const [letters, setLetters] = useState([]);
   const [text, setText] = useState('');
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(null);
 
-  useEffect(() => { loadLetters(); }, []);
-
-  async function loadLetters() {
-    if (isLocal) {
-      setLetters(JSON.parse(localStorage.getItem(LS_KEY)||'[]').reverse());
-    } else {
-      const q = query(collection(db,'users',currentUser.uid,'letters'), orderBy('createdAt','desc'));
-      const snap = await getDocs(q);
-      setLetters(snap.docs.map(d=>({id:d.id,...d.data()})));
-    }
-  }
+  useEffect(() => {
+    if (!coupleId) return;
+    const q = query(collection(db, 'couples', coupleId, 'letters'), orderBy('createdAt', 'desc'));
+    return onSnapshot(q, snap => {
+      setLetters(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+  }, [coupleId]);
 
   async function handleSend(e) {
-    e.preventDefault(); setLoading(true);
-    const letter = { title:title||'จดหมายรัก', text, author:userProfile?.displayName, emoji:userProfile?.avatarEmoji||'💕', createdAt:new Date().toISOString() };
-    if (isLocal) {
-      const s = JSON.parse(localStorage.getItem(LS_KEY)||'[]');
-      s.push({...letter,id:Date.now().toString()});
-      localStorage.setItem(LS_KEY,JSON.stringify(s));
-    } else {
-      await addDoc(collection(db,'users',currentUser.uid,'letters'), {...letter,createdAt:serverTimestamp()});
-    }
-    setText(''); setTitle(''); await loadLetters(); setLoading(false);
+    e.preventDefault();
+    if (!coupleId) return;
+    setLoading(true);
+    await addDoc(collection(db, 'couples', coupleId, 'letters'), {
+      title: title || 'จดหมายรัก',
+      text,
+      author: userProfile?.displayName,
+      authorId: currentUser.uid,
+      emoji: userProfile?.avatarEmoji || '💕',
+      createdAt: serverTimestamp(),
+    });
+    setText(''); setTitle(''); setLoading(false);
   }
 
   return (
@@ -80,7 +79,7 @@ export default function LoveLetters() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-400">
-                    {new Date(l.createdAt?.seconds?l.createdAt.seconds*1000:l.createdAt).toLocaleDateString('th-TH')}
+                    {l.createdAt?.toDate ? l.createdAt.toDate().toLocaleDateString('th-TH') : ''}
                   </span>
                   <span className="text-gray-300 transition-transform" style={{transform:open===l.id?'rotate(180deg)':''}}>▾</span>
                 </div>
