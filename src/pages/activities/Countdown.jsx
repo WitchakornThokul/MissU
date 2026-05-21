@@ -2,31 +2,51 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../../components/Navbar';
 import PageHeader from '../../components/PageHeader';
-
-const LS_KEY = 'missu_countdowns';
+import { collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
 export default function Countdown() {
-  const { userProfile, isLocal, currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
+  const coupleId = currentUser && userProfile?.partnerId
+    ? [currentUser.uid, userProfile.partnerId].sort().join('_') : null;
+
   const [events, setEvents] = useState([]);
-  const [form, setForm] = useState({ name:'', date:'' });
+  const [form, setForm] = useState({ name: '', date: '' });
   const [now, setNow] = useState(new Date());
-  const key = isLocal ? LS_KEY : `${LS_KEY}_${currentUser?.uid}`;
 
-  useEffect(() => { setEvents(JSON.parse(localStorage.getItem(key)||'[]')); }, []);
-  useEffect(() => { const t = setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(t); }, []);
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
-  function save(list) { localStorage.setItem(key,JSON.stringify(list)); setEvents(list); }
-  function handleAdd(e) {
+  useEffect(() => {
+    if (!coupleId) return;
+    const q = query(collection(db, 'couples', coupleId, 'countdowns'), orderBy('createdAt', 'asc'));
+    return onSnapshot(q, snap => {
+      setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+  }, [coupleId]);
+
+  async function handleAdd(e) {
     e.preventDefault();
-    save([...events, {...form, id:Date.now().toString()}]);
-    setForm({name:'',date:''});
+    if (!coupleId) return;
+    await addDoc(collection(db, 'couples', coupleId, 'countdowns'), {
+      name: form.name,
+      date: form.date,
+      createdAt: serverTimestamp(),
+    });
+    setForm({ name: '', date: '' });
+  }
+
+  async function handleRemove(id) {
+    await deleteDoc(doc(db, 'couples', coupleId, 'countdowns', id));
   }
 
   function getDiff(dateStr) {
     const diff = new Date(dateStr) - now;
-    if (diff < 0) return { past:true, days: Math.floor(Math.abs(diff)/86400000) };
+    if (diff < 0) return { past: true, days: Math.floor(Math.abs(diff)/86400000) };
     return {
-      past:false,
+      past: false,
       days: Math.floor(diff/86400000),
       hours: Math.floor((diff%86400000)/3600000),
       mins: Math.floor((diff%3600000)/60000),
@@ -43,7 +63,6 @@ export default function Countdown() {
       <PageHeader emoji="⏰" title="นับวัน" subtitle="ทุกวันมีความหมาย" grad="from-violet-400 to-purple-500" />
 
       <div className="max-w-2xl mx-auto px-4 -mt-6 pb-10">
-        {/* Days together hero */}
         {relDays !== null && (
           <div className="rounded-3xl p-7 text-center text-white mb-5 relative overflow-hidden shadow-xl"
             style={{ background:'linear-gradient(135deg,#7c3aed,#a855f7,#ec4899)' }}>
@@ -54,7 +73,6 @@ export default function Countdown() {
           </div>
         )}
 
-        {/* Add event */}
         <div className="card-love p-5 mb-5">
           <h3 className="font-bold text-gray-700 mb-3 flex items-center gap-2"><span>📅</span> เพิ่มวันสำคัญ</h3>
           <form onSubmit={handleAdd} className="flex gap-2 flex-wrap">
@@ -75,7 +93,7 @@ export default function Countdown() {
                   <h4 className="font-bold text-gray-800 text-lg">{ev.name}</h4>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-400">{new Date(ev.date).toLocaleDateString('th-TH')}</span>
-                    <button onClick={()=>save(events.filter(e=>e.id!==ev.id))} className="text-gray-200 hover:text-rose-400 text-xl leading-none transition-colors">×</button>
+                    <button onClick={()=>handleRemove(ev.id)} className="text-gray-200 hover:text-rose-400 text-xl leading-none transition-colors">×</button>
                   </div>
                 </div>
                 {d.past ? (
@@ -96,7 +114,7 @@ export default function Countdown() {
               </div>
             );
           })}
-          {events.length===0 && (
+          {events.length === 0 && (
             <div className="text-center py-16 text-gray-300">
               <div className="text-6xl mb-3 opacity-40">📅</div>
               <p className="font-display italic text-xl">เพิ่มวันสำคัญของคุณ!</p>
