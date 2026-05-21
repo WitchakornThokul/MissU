@@ -8,6 +8,8 @@ import ViewProfile from './pages/ViewProfile';
 import Profile from './pages/Profile';
 import Chat from './pages/Chat';
 import FindPartner from './pages/FindPartner';
+import People from './pages/People';
+import Feed from './pages/Feed';
 import LoveLetters from './pages/activities/LoveLetters';
 import Countdown from './pages/activities/Countdown';
 import BucketList from './pages/activities/BucketList';
@@ -55,6 +57,8 @@ function App() {
           <Route path="/find-partner" element={<ProtectedRoute><FindPartner /></ProtectedRoute>} />
           <Route path="/activity/:id" element={<ProtectedRoute><ActivityWrapper /></ProtectedRoute>} />
           <Route path="/profile/:uid"  element={<ProtectedRoute><ViewProfile /></ProtectedRoute>} />
+          <Route path="/people"       element={<ProtectedRoute><People /></ProtectedRoute>} />
+          <Route path="/feed"         element={<ProtectedRoute><Feed /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
         <AuthenticatedBottomNav/>

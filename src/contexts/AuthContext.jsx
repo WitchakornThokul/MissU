@@ -7,11 +7,13 @@ import {
   updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import {
   doc, setDoc, getDoc, updateDoc,
   collection, query, where, onSnapshot,
   addDoc, getDocs, serverTimestamp, limit,
+  orderBy, deleteDoc,
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 
@@ -65,6 +67,10 @@ export function AuthProvider({ children }) {
     await setDoc(doc(db, 'users', result.user.uid), profile);
     setUserProfile(profile);
     return result;
+  }
+
+  async function sendPasswordReset(email) {
+    return sendPasswordResetEmail(auth, email);
   }
 
   async function login(email, password) {
@@ -221,6 +227,92 @@ export function AuthProvider({ children }) {
     await updateDoc(doc(db, 'partnerRequests', requestId), { status: 'declined' });
   }
 
+  // ── Friend System ─────────────────────────────────────────────
+
+  async function sendFriendRequest(toUser) {
+    if (!currentUser || !userProfile) return;
+    const q = query(
+      collection(db, 'friendRequests'),
+      where('fromUid', '==', currentUser.uid),
+      where('toUid', '==', toUser.uid),
+      where('status', '==', 'pending')
+    );
+    const existing = await getDocs(q);
+    if (!existing.empty) return 'already_sent';
+    await addDoc(collection(db, 'friendRequests'), {
+      fromUid: currentUser.uid,
+      fromName: userProfile.displayName,
+      fromEmoji: userProfile.avatarEmoji || '💕',
+      fromPhoto: userProfile.photoURL || null,
+      toUid: toUser.uid,
+      status: 'pending',
+      createdAt: serverTimestamp(),
+    });
+    return 'sent';
+  }
+
+  async function acceptFriendRequest(reqId, fromUid) {
+    await updateDoc(doc(db, 'friendRequests', reqId), { status: 'accepted' });
+    const batch = [
+      setDoc(doc(db, 'friends', `${currentUser.uid}_${fromUid}`), {
+        uid: fromUid, friendOf: currentUser.uid, createdAt: serverTimestamp(),
+      }),
+      setDoc(doc(db, 'friends', `${fromUid}_${currentUser.uid}`), {
+        uid: currentUser.uid, friendOf: fromUid, createdAt: serverTimestamp(),
+      }),
+    ];
+    await Promise.all(batch);
+  }
+
+  async function declineFriendRequest(reqId) {
+    await updateDoc(doc(db, 'friendRequests', reqId), { status: 'declined' });
+  }
+
+  async function removeFriend(friendUid) {
+    await deleteDoc(doc(db, 'friends', `${currentUser.uid}_${friendUid}`));
+    await deleteDoc(doc(db, 'friends', `${friendUid}_${currentUser.uid}`));
+  }
+
+  async function getFriends(uid) {
+    const q = query(collection(db, 'friends'), where('friendOf', '==', uid));
+    const snap = await getDocs(q);
+    const uids = snap.docs.map(d => d.data().uid);
+    if (!uids.length) return [];
+    const profiles = await Promise.all(uids.map(u => getDoc(doc(db, 'users', u))));
+    return profiles.filter(d => d.exists()).map(d => d.data());
+  }
+
+  async function getFriendStatus(targetUid) {
+    if (!currentUser) return 'none';
+    const friendDoc = await getDoc(doc(db, 'friends', `${currentUser.uid}_${targetUid}`));
+    if (friendDoc.exists()) return 'friends';
+    const sent = query(collection(db, 'friendRequests'),
+      where('fromUid', '==', currentUser.uid),
+      where('toUid', '==', targetUid),
+      where('status', '==', 'pending'));
+    const sentSnap = await getDocs(sent);
+    if (!sentSnap.empty) return 'sent';
+    const recv = query(collection(db, 'friendRequests'),
+      where('fromUid', '==', targetUid),
+      where('toUid', '==', currentUser.uid),
+      where('status', '==', 'pending'));
+    const recvSnap = await getDocs(recv);
+    if (!recvSnap.empty) return 'received';
+    return 'none';
+  }
+
+  async function searchAllUsers(nameQuery) {
+    const q = (nameQuery || '').trim().slice(0, 50);
+    if (!q || !currentUser) return [];
+    const snap = await getDocs(query(
+      collection(db, 'users'),
+      where('displayName', '>=', q),
+      where('displayName', '<=', q + '\uf8ff'),
+      limit(20)
+    ));
+    return snap.docs.map(d => d.data()).filter(u => u.uid !== currentUser.uid);
+  }
+
   async function removePartner() {
     if (!userProfile?.partnerId || !currentUser) return;
     const pid = userProfile.partnerId;
@@ -306,10 +398,13 @@ export function AuthProvider({ children }) {
     currentUser, userProfile, partnerProfile, incomingRequests,
     loading, isLocal,
     register, login, loginWithGoogle, logout, loginLocal,
+    sendPasswordReset,
     updateUserProfile, updateLocalProfile,
     uploadProfilePhoto, uploadLocalPhoto,
     searchUsers, sendPartnerRequest, acceptPartnerRequest,
     declinePartnerRequest, removePartner,
+    sendFriendRequest, acceptFriendRequest, declineFriendRequest,
+    removeFriend, getFriends, getFriendStatus, searchAllUsers,
   };
 
   return (

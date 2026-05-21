@@ -36,7 +36,8 @@ export default function Landing() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { login, register, loginWithGoogle } = useAuth();
+  const [resetSent, setResetSent] = useState(false);
+  const { login, register, loginWithGoogle, sendPasswordReset } = useAuth();
   const navigate = useNavigate();
 
   const go = () => navigate('/dashboard');
@@ -46,6 +47,17 @@ export default function Landing() {
     try { await loginWithGoogle(); go(); }
     catch { setError('เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองใหม่'); }
     setGoogleLoading(false);
+  }
+
+  async function handleReset(e) {
+    e.preventDefault(); setError(''); setLoading(true);
+    try {
+      await sendPasswordReset(email);
+      setResetSent(true);
+    } catch(err) {
+      setError('ไม่พบอีเมลนี้ในระบบ กรุณาตรวจสอบอีเมล');
+    }
+    setLoading(false);
   }
 
   async function handleSubmit(e) {
@@ -277,13 +289,53 @@ export default function Landing() {
             </form>
 
             {mode === 'login' && (
-              <p className="text-center text-xs mt-4" style={{color:'rgba(255,255,255,.25)'}}>
-                ยังไม่มีบัญชี?{' '}
-                <button onClick={() => { setMode('register'); setError(''); }}
-                  className="font-bold" style={{color:'#ffb3bf',background:'none',border:'none',cursor:'pointer'}}>
-                  สมัครสมาชิก
+              <div className="text-center mt-4 space-y-2">
+                <button onClick={() => { setMode('forgot'); setError(''); setResetSent(false); }}
+                  className="text-xs font-semibold block w-full" style={{color:'rgba(255,255,255,.35)',background:'none',border:'none',cursor:'pointer'}}>
+                  ลืมรหัสผ่าน?
                 </button>
-              </p>
+                <p className="text-xs" style={{color:'rgba(255,255,255,.25)'}}>
+                  ยังไม่มีบัญชี?{' '}
+                  <button onClick={() => { setMode('register'); setError(''); }}
+                    className="font-bold" style={{color:'#ffb3bf',background:'none',border:'none',cursor:'pointer'}}>
+                    สมัครสมาชิก
+                  </button>
+                </p>
+              </div>
+            )}
+
+            {mode === 'forgot' && !resetSent && (
+              <form onSubmit={handleReset} className="mt-4 space-y-3">
+                <div>
+                  <label className="input-label" style={{color:'rgba(255,255,255,.35)'}}>อีเมลของคุณ</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                    placeholder="you@example.com" required
+                    className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
+                    style={{fontFamily:"'Nunito',sans-serif",background:'rgba(255,255,255,.10)',border:'1.5px solid rgba(255,255,255,.18)',color:'white',colorScheme:'dark'}}/>
+                </div>
+                {error && (
+                  <div className="py-2.5 px-4 rounded-2xl text-sm text-center"
+                    style={{background:'rgba(232,99,122,.15)',border:'1px solid rgba(232,99,122,.3)',color:'#ffb3bf'}}>
+                    {error}
+                  </div>
+                )}
+                <button type="submit" disabled={loading}
+                  className="w-full py-3.5 rounded-2xl font-bold text-sm text-white"
+                  style={{background:'linear-gradient(135deg,#e8637a,#d44f66)',boxShadow:'0 4px 20px rgba(232,99,122,.4)',border:'none',cursor:'pointer',opacity:loading?0.7:1}}>
+                  {loading ? 'กำลังส่ง...' : 'ส่งลิงก์รีเซ็ตรหัสผ่าน'}
+                </button>
+              </form>
+            )}
+
+            {mode === 'forgot' && resetSent && (
+              <div className="mt-4 py-4 px-5 rounded-2xl text-center"
+                style={{background:'rgba(34,197,94,.12)',border:'1px solid rgba(34,197,94,.3)'}}>
+                <div className="text-2xl mb-2">📧</div>
+                <p className="font-bold text-sm" style={{color:'#86efac'}}>ส่งอีเมลแล้ว!</p>
+                <p className="text-xs mt-1" style={{color:'rgba(255,255,255,.4)'}}>
+                  เช็คอีเมล <strong style={{color:'rgba(255,255,255,.7)'}}>{email}</strong> เพื่อรีเซ็ตรหัสผ่าน
+                </p>
+              </div>
             )}
           </div>
         )}

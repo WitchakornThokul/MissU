@@ -1,21 +1,36 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
-import { FiHome, FiMessageCircle, FiGrid, FiHeart, FiUser } from 'react-icons/fi';
+import { FiHome, FiMessageCircle, FiUsers, FiRss, FiUser } from 'react-icons/fi';
 
 export default function BottomNav() {
-  const { userProfile, incomingRequests, isLocal } = useAuth();
+  const { currentUser, userProfile, incomingRequests, isLocal } = useAuth();
   const location = useLocation();
   const active = location.pathname;
+  const [friendReqCount, setFriendReqCount] = useState(0);
 
   const hasPartner = isLocal || !!userProfile?.partnerId;
   const pendingCount = isLocal ? 0 : incomingRequests.length;
 
+  // Listen to incoming friend requests
+  useEffect(() => {
+    if (!currentUser || isLocal) return;
+    const q = query(
+      collection(db, 'friendRequests'),
+      where('toUid', '==', currentUser.uid),
+      where('status', '==', 'pending')
+    );
+    return onSnapshot(q, snap => setFriendReqCount(snap.size));
+  }, [currentUser, isLocal]);
+
   const TABS = [
-    { to: '/dashboard',    label: 'หน้าหลัก', Icon: FiHome },
-    { to: '/chat',         label: 'แชท',      Icon: FiMessageCircle, locked: !hasPartner },
-    { to: '/dashboard',    label: 'กิจกรรม',  Icon: FiGrid },
-    { to: '/find-partner', label: 'คู่รัก',   Icon: FiHeart, badge: pendingCount },
-    { to: '/profile',      label: 'โปรไฟล์',  Icon: FiUser },
+    { to: '/dashboard', label: 'หน้าหลัก', Icon: FiHome },
+    { to: '/feed',      label: 'ฟีด',      Icon: FiRss },
+    { to: '/chat',      label: 'แชท',      Icon: FiMessageCircle, locked: !hasPartner },
+    { to: '/people',    label: 'คนรู้จัก', Icon: FiUsers, badge: friendReqCount },
+    { to: '/profile',   label: 'โปรไฟล์',  Icon: FiUser },
   ];
 
   return (
