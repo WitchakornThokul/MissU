@@ -72,12 +72,14 @@ function CoupleSidebar({ userProfile, partnerProfile, isLocal, days, quote }) {
                 <div className="text-xs font-bold text-gray-400 mt-1">วันที่อยู่ด้วยกัน</div>
                 <div className="flex items-center gap-2 mt-2 justify-center">
                     <div className="animate-heartbeat text-xl">💕</div>
-                    {userProfile?.streakCount > 0 && (
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-full" style={{background:'#fff7ed'}}>
-                        <span style={{fontSize:'0.85rem'}}>🔥</span>
-                        <span className="text-xs font-black" style={{color:'#ea580c'}}>{userProfile.streakCount}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+                      style={{background: userProfile?.streakCount > 0 ? '#fff7ed' : '#f3f4f6'}}>
+                      <span style={{fontSize:'0.85rem'}}>🔥</span>
+                      <span className="text-xs font-black"
+                        style={{color: userProfile?.streakCount > 0 ? '#ea580c' : '#9ca3af'}}>
+                        {userProfile?.streakCount || 0}
+                      </span>
+                    </div>
                   </div>
               </div>
               <AvatarBubble profile={partnerProfile} label="คู่รัก" ringFrom="#1da0bc" ringTo="#6366f1" size={20}/>
@@ -227,12 +229,14 @@ export default function Dashboard() {
                     {days !== null && days >= 0 ? days : '—'}
                   </div>
                   <div className="text-xs font-bold text-gray-400 mt-1">วันที่อยู่ด้วยกัน</div>
-                  {userProfile?.streakCount > 0 && (
-                    <div className="flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full" style={{background:'#fff7ed'}}>
-                      <span style={{fontSize:'0.9rem'}}>🔥</span>
-                      <span className="text-xs font-black" style={{color:'#ea580c'}}>{userProfile.streakCount}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full"
+                    style={{background: userProfile?.streakCount > 0 ? '#fff7ed' : '#f3f4f6'}}>
+                    <span style={{fontSize:'0.9rem'}}>🔥</span>
+                    <span className="text-xs font-black"
+                      style={{color: userProfile?.streakCount > 0 ? '#ea580c' : '#9ca3af'}}>
+                      {userProfile?.streakCount || 0}
+                    </span>
+                  </div>
                 </Link>
                 <Link to={`/profile/${userProfile?.partnerId}`}>
                   <AvatarBubble profile={partnerProfile} label="คู่รัก" ringFrom="#1da0bc" ringTo="#6366f1"/>
