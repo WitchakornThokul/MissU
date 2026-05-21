@@ -77,11 +77,18 @@ function CoupleSidebar({ userProfile, partnerProfile, isLocal, days, quote }) {
             <p className="font-display italic text-gray-400 text-sm leading-relaxed">
               "{quote}"
             </p>
-            <Link to="/chat"
-              className="mt-4 flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl font-bold text-sm transition-all hover:opacity-90"
-              style={{background:'linear-gradient(135deg,#e8637a,#1da0bc)', color:'white'}}>
-              <FiMessageCircle size={16}/> แชทกับคู่รัก
-            </Link>
+            <div className="flex gap-2 mt-4">
+              <Link to={`/profile/${userProfile?.partnerId}`}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl font-bold text-sm transition-all hover:opacity-90"
+                style={{background:'#fff0f3', color:'#e8637a', border:'1.5px solid rgba(232,99,122,.2)'}}>
+                👤 โปรไฟล์
+              </Link>
+              <Link to="/chat"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl font-bold text-sm transition-all hover:opacity-90"
+                style={{background:'linear-gradient(135deg,#e8637a,#1da0bc)', color:'white'}}>
+                <FiMessageCircle size={15}/> แชท
+              </Link>
+            </div>
           </>
         ) : !isLocal ? (
           <>
@@ -206,15 +213,17 @@ export default function Dashboard() {
               <div className="flex items-center justify-between bg-white rounded-3xl p-5 mb-5"
                 style={{boxShadow:'0 2px 16px rgba(0,0,0,0.05)', border:'1px solid #f5f5f5'}}>
                 <AvatarBubble profile={userProfile} label="ฉัน" ringFrom="#e8637a" ringTo="#f472b6"/>
-                <div className="flex flex-col items-center flex-1">
+                <Link to="/chat" className="flex flex-col items-center flex-1 no-underline">
                   <div className="font-black leading-none text-gradient"
                     style={{fontSize:'clamp(2.5rem,8vw,3rem)', fontFamily:"'Nunito',sans-serif"}}>
                     {days !== null && days >= 0 ? days : '—'}
                   </div>
                   <div className="text-xs font-bold text-gray-400 mt-1">วันที่อยู่ด้วยกัน</div>
                   <div className="animate-heartbeat text-base mt-1.5">💕</div>
-                </div>
-                <AvatarBubble profile={partnerProfile} label="คู่รัก" ringFrom="#1da0bc" ringTo="#6366f1"/>
+                </Link>
+                <Link to={`/profile/${userProfile?.partnerId}`}>
+                  <AvatarBubble profile={partnerProfile} label="คู่รัก" ringFrom="#1da0bc" ringTo="#6366f1"/>
+                </Link>
               </div>
             ) : !isLocal ? (
               <Link to="/find-partner"
