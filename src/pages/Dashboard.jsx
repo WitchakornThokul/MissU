@@ -10,14 +10,14 @@ import {
 } from 'react-icons/fi';
 
 const ACTIVITIES = [
-  { id:'love-letters', Icon:FiMail,        title:'จดหมายรัก',        desc:'เขียนความรู้สึกให้กัน',   from:'#e8637a', to:'#f472b6' },
-  { id:'countdown',    Icon:FiClock,       title:'นับวัน',            desc:'นับวันพิเศษของเรา',       from:'#8b5cf6', to:'#a78bfa' },
-  { id:'bucket-list',  Icon:FiCheckSquare, title:'Bucket List',       desc:'สิ่งที่อยากทำด้วยกัน',   from:'#f97316', to:'#fbbf24' },
-  { id:'memory-wall',  Icon:FiCamera,      title:'ความทรงจำ',         desc:'เก็บทุกช่วงเวลาดีๆ',    from:'#14b8a6', to:'#1da0bc' },
+  { id:'love-letters', Icon:FiMail,        title:'จดหมายรัก',        desc:'เขียนความรู้สึกให้กัน',   from:'#f43f5e', to:'#fb7185' },
+  { id:'countdown',    Icon:FiClock,       title:'นับวัน',            desc:'นับวันพิเศษของเรา',       from:'#a855f7', to:'#c084fc' },
+  { id:'bucket-list',  Icon:FiCheckSquare, title:'Bucket List',       desc:'สิ่งที่อยากทำด้วยกัน',   from:'#f97316', to:'#fb923c' },
+  { id:'memory-wall',  Icon:FiCamera,      title:'ความทรงจำ',         desc:'เก็บทุกช่วงเวลาดีๆ',    from:'#ec4899', to:'#f472b6' },
   { id:'love-quiz',    Icon:FiHelpCircle,  title:'รู้จักกันดีแค่ไหน', desc:'ทดสอบความเข้าใจกัน',    from:'#6366f1', to:'#818cf8' },
-  { id:'date-wheel',   Icon:FiRefreshCw,   title:'วงล้อเดท',          desc:'สปินหาไอเดียเดท',        from:'#ec4899', to:'#e8637a' },
-  { id:'daily-note',   Icon:FiEdit3,       title:'โน้ตรายวัน',        desc:'บอกความรู้สึกทุกวัน',    from:'#f59e0b', to:'#ef4444' },
-  { id:'achievements', Icon:FiAward,       title:'ความสำเร็จ',        desc:'ปลดล็อกความสำเร็จ',      from:'#eab308', to:'#f97316' },
+  { id:'date-wheel',   Icon:FiRefreshCw,   title:'วงล้อเดท',          desc:'สปินหาไอเดียเดท',        from:'#e879f9', to:'#f0abfc' },
+  { id:'daily-note',   Icon:FiEdit3,       title:'โน้ตรายวัน',        desc:'บอกความรู้สึกทุกวัน',    from:'#f43f5e', to:'#fb923c' },
+  { id:'achievements', Icon:FiAward,       title:'ความสำเร็จ',        desc:'ปลดล็อกความสำเร็จ',      from:'#eab308', to:'#fbbf24' },
 ];
 
 const QUOTES = [
@@ -59,7 +59,7 @@ function CoupleSidebar({ userProfile, partnerProfile, isLocal, days, quote }) {
     <div className="hidden md:flex flex-col gap-4 w-72 flex-shrink-0">
       {/* Couple card */}
       <div className="bg-white rounded-3xl p-6 text-center"
-        style={{boxShadow:'0 4px 24px rgba(0,0,0,0.07)', border:'1px solid #f0f0f0', position:'sticky', top:80}}>
+        style={{boxShadow:'0 4px 24px rgba(0,0,0,0.08)', position:'sticky', top:80}}>
         {(partnerProfile || isLocal) ? (
           <>
             <div className="flex items-center justify-between mb-5">
@@ -145,18 +145,18 @@ function ActivityCard({ a, hasPartner }) {
   return (
     <Link
       to={hasPartner ? `/activity/${a.id}` : '/find-partner'}
-      className="bg-white rounded-2xl p-5 flex flex-col items-center gap-3 transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] group"
-      style={{border:'1px solid #f0f0f0'}}>
-      <div className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
+      className="bg-white rounded-3xl p-6 flex flex-col items-center gap-3 transition-all hover:-translate-y-1 active:scale-[0.97] group"
+      style={{boxShadow:'0 4px 16px rgba(0,0,0,0.06)'}}>
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
         style={{
           background: hasPartner ? `linear-gradient(135deg,${a.from},${a.to})` : '#f3f4f6',
-          boxShadow: hasPartner ? `0 6px 16px ${a.from}40` : 'none',
+          boxShadow: hasPartner ? `0 8px 20px ${a.from}35` : 'none',
         }}>
-        <Icon size={26} strokeWidth={1.8} color={hasPartner ? 'white' : '#d1d5db'}/>
+        <Icon size={28} strokeWidth={1.8} color={hasPartner ? 'white' : '#d1d5db'}/>
       </div>
       <div className="text-center">
         <p className="font-bold text-gray-700 text-sm leading-tight">{a.title}</p>
-        <p className="text-gray-400 text-xs mt-0.5 leading-snug">{a.desc}</p>
+        <p className="text-gray-400 text-xs mt-1 leading-snug">{a.desc}</p>
       </div>
       {!hasPartner && (
         <span className="text-xs font-semibold text-gray-300">🔒 ต้องการคู่รัก</span>
@@ -220,16 +220,26 @@ export default function Dashboard() {
           {/* ── Mobile: couple header ── */}
           <div className="md:hidden">
             {(hasPartner && (partnerProfile || isLocal)) ? (
-              <div className="flex items-center justify-between bg-white rounded-3xl p-5 mb-5"
-                style={{boxShadow:'0 2px 16px rgba(0,0,0,0.05)', border:'1px solid #f5f5f5'}}>
-                <AvatarBubble profile={userProfile} label="ฉัน" ringFrom="#e8637a" ringTo="#f472b6"/>
-                <Link to="/chat" className="flex flex-col items-center flex-1 no-underline">
-                  <div className="font-black leading-none text-gradient"
-                    style={{fontSize:'clamp(2.5rem,8vw,3rem)', fontFamily:"'Nunito',sans-serif"}}>
-                    {days !== null && days >= 0 ? days : '—'}
+              <div className="bg-white rounded-3xl p-5 mb-5 text-center"
+                style={{boxShadow:'0 4px 20px rgba(0,0,0,0.07)'}}>
+                {/* Avatars row */}
+                <div className="flex items-center justify-between mb-3">
+                  <AvatarBubble profile={userProfile} label="ฉัน" ringFrom="#e8637a" ringTo="#f472b6"/>
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="font-black leading-none text-gradient"
+                      style={{fontSize:'clamp(3rem,10vw,3.5rem)', fontFamily:"'Nunito',sans-serif"}}>
+                      {days !== null && days >= 0 ? days : '—'}
+                    </div>
+                    <div className="text-xs font-bold text-gray-400 mt-1">วันที่อยู่ด้วยกัน</div>
                   </div>
-                  <div className="text-xs font-bold text-gray-400 mt-1">วันที่อยู่ด้วยกัน</div>
-                  <div className="flex items-center gap-1 mt-1.5 px-2.5 py-0.5 rounded-full"
+                  <Link to={`/profile/${userProfile?.partnerId}`}>
+                    <AvatarBubble profile={partnerProfile} label="คู่รัก" ringFrom="#1da0bc" ringTo="#6366f1"/>
+                  </Link>
+                </div>
+                {/* Heart + streak row */}
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <div className="animate-heartbeat text-xl">💕</div>
+                  <div className="flex items-center gap-1 px-3 py-1 rounded-full"
                     style={{background: userProfile?.streakCount > 0 ? '#fff7ed' : '#f3f4f6'}}>
                     <span style={{fontSize:'0.9rem'}}>🔥</span>
                     <span className="text-xs font-black"
@@ -237,10 +247,22 @@ export default function Dashboard() {
                       {userProfile?.streakCount || 0}
                     </span>
                   </div>
-                </Link>
-                <Link to={`/profile/${userProfile?.partnerId}`}>
-                  <AvatarBubble profile={partnerProfile} label="คู่รัก" ringFrom="#1da0bc" ringTo="#6366f1"/>
-                </Link>
+                </div>
+                {/* Quote */}
+                <p className="font-display italic text-gray-400 text-xs leading-relaxed mb-4">"{quote}"</p>
+                {/* Buttons */}
+                <div className="flex gap-2">
+                  <Link to={`/profile/${userProfile?.partnerId}`}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl font-bold text-sm"
+                    style={{background:'#fff0f3', color:'#e8637a'}}>
+                    👤 โปรไฟล์
+                  </Link>
+                  <Link to="/chat"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl font-bold text-sm text-white"
+                    style={{background:'linear-gradient(135deg,#e8637a,#1da0bc)'}}>
+                    <FiMessageCircle size={15}/> แชท
+                  </Link>
+                </div>
               </div>
             ) : !isLocal ? (
               <Link to="/find-partner"
@@ -261,7 +283,7 @@ export default function Dashboard() {
 
           {/* ── Mobile: story circles ── */}
           <div className="md:hidden bg-white rounded-3xl p-4 mb-5"
-            style={{boxShadow:'0 2px 16px rgba(0,0,0,0.05)', border:'1px solid #f5f5f5'}}>
+            style={{boxShadow:'0 4px 16px rgba(0,0,0,0.06)'}}>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 px-1">กิจกรรมของเรา</p>
             <div className="flex gap-5 overflow-x-auto pb-1 hide-scrollbar">
               {ACTIVITIES.map(a => <StoryCircle key={a.id} a={a} hasPartner={hasPartner}/>)}
@@ -270,8 +292,8 @@ export default function Dashboard() {
 
           {/* ── Desktop: activity grid ── */}
           <div className="hidden md:block">
-            <p className="font-bold text-gray-600 mb-4" style={{fontSize:'1.05rem'}}>กิจกรรมของเรา</p>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <p className="font-bold text-gray-600 mb-5" style={{fontSize:'1.05rem'}}>กิจกรรมของเรา</p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
               {ACTIVITIES.map(a => <ActivityCard key={a.id} a={a} hasPartner={hasPartner}/>)}
             </div>
           </div>
@@ -285,17 +307,16 @@ export default function Dashboard() {
                   className="text-xs font-bold"
                   style={{color:'#14b8a6'}}>ดูทั้งหมด →</Link>
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2.5">
                 {memories.map(m => (
                   <Link key={m.id} to="/activity/memory-wall"
-                    className="rounded-2xl overflow-hidden transition-all hover:scale-[1.02] hover:shadow-md"
-                    style={{background:m.bg||'#fff1f3', border:`1px solid ${m.border||'#fda4af'}`}}>
+                    className="rounded-2xl overflow-hidden transition-all hover:scale-[1.03] hover:shadow-lg"
+                    style={{background:m.bg||'#fff1f3', boxShadow:'0 2px 8px rgba(0,0,0,0.06)'}}>
                     {m.imageUrl ? (
                       <img src={m.imageUrl} alt="" className="w-full aspect-square object-cover"/>
                     ) : (
                       <div className="aspect-square flex flex-col items-center justify-center p-3">
-                        <div className="text-2xl mb-1">{m.emoji}</div>
-                        <p className="text-xs font-bold text-gray-700 text-center leading-tight line-clamp-2">{m.title}</p>
+                        <p className="text-xs font-bold text-gray-700 text-center leading-tight line-clamp-3">{m.title}</p>
                       </div>
                     )}
                   </Link>
