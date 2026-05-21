@@ -10,73 +10,64 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'No image provided' });
   }
 
-  const key = process.env.UPLOADCARE_PUBLIC_KEY || '8240b649ccee18539f768a9a62bbd93d';
-  if (!key) {
-    return res.status(500).json({ error: 'Upload service not configured' });
+  // Try ImgBB first (easier to use)
+  const imgbbKey = process.env.IMGBB_KEY;
+
+  if (imgbbKey) {
+    try {
+      const body = new URLSearchParams();
+      body.append('key', imgbbKey);
+      body.append('image', image);
+
+      const response = await fetch('https://api.imgbb.com/1/upload', {
+        method: 'POST',
+        body,
+      });
+
+      const json = await response.json();
+
+      if (json.success && json.data?.url) {
+        return res.status(200).json({ url: json.data.url });
+      }
+
+      throw new Error(json.error?.message || 'ImgBB upload failed');
+    } catch (err) {
+      console.error('ImgBB error:', err);
+      // Fall through to Uploadcare
+    }
   }
 
+  // Fallback to Uploadcare
+  const uploadcareKey = process.env.UPLOADCARE_PUBLIC_KEY || '8240b649ccee18539f768a9a62bbd93d';
+
   try {
-    // Convert base64 to buffer
-    const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
-    const buffer = Buffer.from(base64Data, 'base64');
+    // Use Uploadcare's simpler from-url endpoint
+    // First convert base64 to data URL
+    const dataUrl = `data:image/jpeg;base64,${image}`;
 
-    // Upload using Uploadcare Upload API with proper multipart/form-data
-    const boundary = '----WebKitFormBoundary' + Math.random().toString(36);
+    const body = new URLSearchParams();
+    body.append('pub_key', uploadcareKey);
+    body.append('store', 'auto');
+    body.append('source_url', dataUrl);
 
-    const parts = [
-      `--${boundary}`,
-      `Content-Disposition: form-data; name="UPLOADCARE_PUB_KEY"`,
-      '',
-      key,
-      `--${boundary}`,
-      `Content-Disposition: form-data; name="UPLOADCARE_STORE"`,
-      '',
-      'auto',
-      `--${boundary}`,
-      `Content-Disposition: form-data; name="file"; filename="image.jpg"`,
-      `Content-Type: image/jpeg`,
-      '',
-    ].join('\r\n');
-
-    const body = Buffer.concat([
-      Buffer.from(parts + '\r\n'),
-      buffer,
-      Buffer.from('\r\n--' + boundary + '--\r\n'),
-    ]);
-
-    const response = await fetch('https://upload.uploadcare.com/base/', {
+    const response = await fetch('https://upload.uploadcare.com/from_url/', {
       method: 'POST',
-      headers: {
-        'Content-Type': `multipart/form-data; boundary=${boundary}`,
-        'Accept': 'application/json',
-      },
       body,
     });
 
-    const text = await response.text();
-    let json;
+    const json = await response.json();
 
-    try {
-      json = JSON.parse(text);
-    } catch (parseError) {
-      console.error('Response text:', text);
-      throw new Error('Invalid JSON response from Uploadcare');
+    if (response.ok && json.file_id) {
+      const fileUrl = `https://ucarecdn.com/${json.file_id}/`;
+      return res.status(200).json({ url: fileUrl });
     }
 
-    if (!response.ok) {
-      console.error('Uploadcare error:', json);
-      throw new Error(json.error?.content || json.error || 'Upload failed');
-    }
-
-    if (!json.file) {
-      console.error('No file in response:', json);
-      throw new Error('No file ID returned from Uploadcare');
-    }
-
-    const fileUrl = `https://ucarecdn.com/${json.file}/`;
-    return res.status(200).json({ url: fileUrl });
+    throw new Error(json.error || 'Uploadcare upload failed');
   } catch (err) {
-    console.error('Upload error:', err.message, err.stack);
-    return res.status(500).json({ error: err.message || 'Upload failed' });
+    console.error('Uploadcare error:', err);
+    return res.status(500).json({
+      error: 'Upload service unavailable. Please add IMGBB_KEY to environment variables.',
+      details: err.message
+    });
   }
 }
