@@ -16,19 +16,41 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Use Uploadcare's simple upload endpoint with form-urlencoded
-    const formBody = new URLSearchParams({
-      'UPLOADCARE_PUB_KEY': key,
-      'UPLOADCARE_STORE': 'auto',
-      'file': image,
-    });
+    // Convert base64 to buffer
+    const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    // Upload using Uploadcare Upload API with proper multipart/form-data
+    const boundary = '----WebKitFormBoundary' + Math.random().toString(36);
+
+    const parts = [
+      `--${boundary}`,
+      `Content-Disposition: form-data; name="UPLOADCARE_PUB_KEY"`,
+      '',
+      key,
+      `--${boundary}`,
+      `Content-Disposition: form-data; name="UPLOADCARE_STORE"`,
+      '',
+      'auto',
+      `--${boundary}`,
+      `Content-Disposition: form-data; name="file"; filename="image.jpg"`,
+      `Content-Type: image/jpeg`,
+      '',
+    ].join('\r\n');
+
+    const body = Buffer.concat([
+      Buffer.from(parts + '\r\n'),
+      buffer,
+      Buffer.from('\r\n--' + boundary + '--\r\n'),
+    ]);
 
     const response = await fetch('https://upload.uploadcare.com/base/', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Accept': 'application/json',
       },
-      body: formBody.toString(),
+      body,
     });
 
     const text = await response.text();
@@ -37,18 +59,24 @@ export default async function handler(req, res) {
     try {
       json = JSON.parse(text);
     } catch (parseError) {
-      console.error('Parse error:', text);
-      throw new Error('Invalid response from upload service');
+      console.error('Response text:', text);
+      throw new Error('Invalid JSON response from Uploadcare');
     }
 
-    if (!response.ok || !json.file) {
+    if (!response.ok) {
+      console.error('Uploadcare error:', json);
       throw new Error(json.error?.content || json.error || 'Upload failed');
+    }
+
+    if (!json.file) {
+      console.error('No file in response:', json);
+      throw new Error('No file ID returned from Uploadcare');
     }
 
     const fileUrl = `https://ucarecdn.com/${json.file}/`;
     return res.status(200).json({ url: fileUrl });
   } catch (err) {
-    console.error('Upload error:', err);
+    console.error('Upload error:', err.message, err.stack);
     return res.status(500).json({ error: err.message || 'Upload failed' });
   }
 }
