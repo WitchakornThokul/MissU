@@ -12,35 +12,45 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
+    <nav className="sticky top-0 z-50 glass-white shadow-sm"
+      style={{ borderBottom:'1px solid rgba(244,63,94,0.1)' }}>
       <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/dashboard" className="flex items-center gap-2 text-rose-500 font-bold text-xl">
-          <span>💕</span> MissU
+
+        <Link to="/dashboard" className="flex items-center gap-2 group">
+          <span className="text-2xl group-hover:animate-heartbeat">💕</span>
+          <span className="font-display font-bold text-xl text-gradient">MissU</span>
         </Link>
+
         {currentUser && (
-          <div className="flex items-center gap-4">
-            <Link
-              to="/dashboard"
-              className={`text-sm font-medium transition-colors ${location.pathname === '/dashboard' ? 'text-rose-500' : 'text-gray-500 hover:text-rose-400'}`}
-            >
-              Home
-            </Link>
-            <Link
-              to="/profile"
-              className={`text-sm font-medium transition-colors ${location.pathname === '/profile' ? 'text-rose-500' : 'text-gray-500 hover:text-rose-400'}`}
-            >
-              Profile
-            </Link>
-            <div className="flex items-center gap-2">
-              <span className="text-lg">{userProfile?.avatarEmoji || '💕'}</span>
-              <span className="text-sm text-gray-600 hidden sm:block">{userProfile?.displayName}</span>
+          <div className="flex items-center gap-1 sm:gap-3">
+            {[
+              { to:'/dashboard', label:'หน้าหลัก' },
+              { to:'/profile',   label:'โปรไฟล์' },
+            ].map(({ to, label }) => (
+              <Link key={to} to={to}
+                className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-all ${
+                  location.pathname === to
+                    ? 'text-white'
+                    : 'text-gray-500 hover:text-rose-500'
+                }`}
+                style={location.pathname === to
+                  ? { background:'linear-gradient(135deg,#f43f5e,#ec4899)', boxShadow:'0 2px 12px rgba(244,63,94,0.3)' }
+                  : {}}>
+                {label}
+              </Link>
+            ))}
+
+            <div className="flex items-center gap-2 ml-1 pl-3"
+              style={{ borderLeft:'1px solid rgba(244,63,94,0.15)' }}>
+              <span className="text-xl">{userProfile?.avatarEmoji || '💕'}</span>
+              <span className="text-sm font-semibold text-gray-600 hidden sm:block max-w-[80px] truncate">
+                {userProfile?.displayName}
+              </span>
+              <button onClick={handleLogout}
+                className="text-xs text-gray-300 hover:text-rose-400 transition-colors font-medium ml-1">
+                ออก
+              </button>
             </div>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-400 hover:text-rose-400 transition-colors"
-            >
-              Logout
-            </button>
           </div>
         )}
       </div>
