@@ -4,10 +4,13 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase/config';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db, storage } from '../firebase/config';
 
 const AuthContext = createContext();
 
@@ -25,14 +28,10 @@ export function AuthProvider({ children }) {
     const result = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(result.user, { displayName });
     const profile = {
-      uid: result.user.uid,
-      displayName,
-      email,
-      bio: '',
-      avatarEmoji: '💕',
+      uid: result.user.uid, displayName, email,
+      bio: '', avatarEmoji: '💕', photoURL: null,
       relationshipStart: new Date().toISOString().split('T')[0],
-      partnerId: null,
-      createdAt: new Date().toISOString(),
+      partnerId: null, createdAt: new Date().toISOString(),
     };
     await setDoc(doc(db, 'users', result.user.uid), profile);
     setUserProfile(profile);
@@ -43,6 +42,49 @@ export function AuthProvider({ children }) {
     const result = await signInWithEmailAndPassword(auth, email, password);
     await loadUserProfile(result.user.uid);
     return result;
+  }
+
+  async function loginWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const snap = await getDoc(doc(db, 'users', result.user.uid));
+    if (!snap.exists()) {
+      const profile = {
+        uid: result.user.uid,
+        displayName: result.user.displayName || 'User',
+        email: result.user.email,
+        photoURL: result.user.photoURL || null,
+        bio: '', avatarEmoji: '💕',
+        relationshipStart: new Date().toISOString().split('T')[0],
+        partnerId: null, createdAt: new Date().toISOString(),
+      };
+      await setDoc(doc(db, 'users', result.user.uid), profile);
+      setUserProfile(profile);
+    } else {
+      setUserProfile(snap.data());
+    }
+    return result;
+  }
+
+  async function uploadProfilePhoto(file) {
+    if (!currentUser) return null;
+    const ref = storageRef(storage, `profiles/${currentUser.uid}`);
+    await uploadBytes(ref, file);
+    const url = await getDownloadURL(ref);
+    await updateUserProfile(currentUser.uid, { photoURL: url });
+    return url;
+  }
+
+  function uploadLocalPhoto(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const url = e.target.result;
+        updateLocalProfile({ photoURL: url });
+        resolve(url);
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   async function logout() {
@@ -111,8 +153,9 @@ export function AuthProvider({ children }) {
 
   const value = {
     currentUser, userProfile, loading, isLocal,
-    register, login, logout, loginLocal,
+    register, login, loginWithGoogle, logout, loginLocal,
     updateUserProfile, updateLocalProfile,
+    uploadProfilePhoto, uploadLocalPhoto,
   };
 
   return (
