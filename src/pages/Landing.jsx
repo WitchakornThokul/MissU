@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { MissULogo } from '../components/MissULogo';
 
 const EMOJIS = ['💕','🌹','🦋','🌸','💖','🍓','🌺','🐱','🐰','🌙'];
 
 const FLOATS = [
-  { emoji:'💕', s:'text-3xl', top:'7%',  left:'6%',   cls:'animate-float-a', d:'delay-0' },
-  { emoji:'🌸', s:'text-2xl', top:'14%', left:'87%',  cls:'animate-float-b', d:'delay-500' },
-  { emoji:'💖', s:'text-4xl', top:'70%', left:'5%',   cls:'animate-float-c', d:'delay-1000' },
-  { emoji:'✨', s:'text-xl',  top:'28%', left:'92%',  cls:'animate-sparkle', d:'delay-300' },
-  { emoji:'🌹', s:'text-2xl', top:'82%', left:'80%',  cls:'animate-float-b', d:'delay-1500' },
-  { emoji:'💫', s:'text-xl',  top:'52%', left:'3%',   cls:'animate-sparkle', d:'delay-700' },
-  { emoji:'🦋', s:'text-2xl', top:'42%', left:'90%',  cls:'animate-float-a', d:'delay-2000' },
+  { emoji:'💕', s:'text-3xl', top:'8%',  left:'5%',   cls:'animate-float-a delay-0' },
+  { emoji:'🌸', s:'text-2xl', top:'12%', left:'88%',  cls:'animate-float-b delay-500' },
+  { emoji:'💖', s:'text-3xl', top:'68%', left:'4%',   cls:'animate-float-c delay-1000' },
+  { emoji:'✨', s:'text-xl',  top:'30%', left:'93%',  cls:'animate-sparkle delay-300' },
+  { emoji:'🌹', s:'text-2xl', top:'80%', left:'82%',  cls:'animate-float-b delay-1500' },
+  { emoji:'💫', s:'text-xl',  top:'50%', left:'2%',   cls:'animate-sparkle delay-700' },
+  { emoji:'🦋', s:'text-2xl', top:'44%', left:'91%',  cls:'animate-float-a delay-2000' },
 ];
 
 const GoogleIcon = () => (
@@ -23,8 +24,14 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const BackIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <path d="M19 12H5M12 5l-7 7 7 7"/>
+  </svg>
+);
+
 export default function Landing() {
-  const [mode, setMode] = useState(null); // null | 'login' | 'register' | 'local'
+  const [mode, setMode] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -40,7 +47,7 @@ export default function Landing() {
   async function handleGoogle() {
     setGoogleLoading(true); setError('');
     try { await loginWithGoogle(); go(); }
-    catch(e) { setError('เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองใหม่'); }
+    catch { setError('เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองใหม่'); }
     setGoogleLoading(false);
   }
 
@@ -65,153 +72,253 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{background:'linear-gradient(140deg,#1e0a2e 0%,#2d0a1e 40%,#0e0720 100%)'}}>
+      style={{background:'linear-gradient(150deg, #0f1f2b 0%, #0d2233 40%, #0a1420 100%)'}}>
 
-      {/* Ambient glows */}
-      <div className="absolute pointer-events-none" style={{top:'20%',left:'15%',width:380,height:380,borderRadius:'50%',background:'radial-gradient(circle,rgba(244,63,94,.12) 0%,transparent 70%)'}}/>
-      <div className="absolute pointer-events-none" style={{bottom:'20%',right:'15%',width:320,height:320,borderRadius:'50%',background:'radial-gradient(circle,rgba(124,58,237,.12) 0%,transparent 70%)'}}/>
+      {/* Ambient glow */}
+      <div className="absolute pointer-events-none" style={{top:'15%',left:'10%',width:420,height:420,borderRadius:'50%',background:'radial-gradient(circle,rgba(232,99,122,.10) 0%,transparent 70%)'}}/>
+      <div className="absolute pointer-events-none" style={{bottom:'15%',right:'10%',width:380,height:380,borderRadius:'50%',background:'radial-gradient(circle,rgba(29,160,188,.10) 0%,transparent 70%)'}}/>
+      <div className="absolute pointer-events-none" style={{top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:600,height:600,borderRadius:'50%',background:'radial-gradient(circle,rgba(255,255,255,.02) 0%,transparent 60%)'}}/>
 
       {/* Floating decorations */}
-      {FLOATS.map((f,i)=>(
-        <div key={i} className={`absolute select-none pointer-events-none ${f.s} ${f.cls} ${f.d}`} style={{top:f.top,left:f.left}}>{f.emoji}</div>
+      {FLOATS.map((f,i) => (
+        <div key={i} className={`absolute select-none pointer-events-none ${f.s} ${f.cls}`}
+          style={{top:f.top, left:f.left}}>{f.emoji}</div>
       ))}
 
-      <div className="relative z-10 w-full max-w-[400px] mx-auto px-5 py-8">
+      {/* Main card */}
+      <div className="relative z-10 w-full max-w-[420px] mx-auto px-5 py-10">
+
         {!mode ? (
           /* ── Home screen ── */
-          <div className="animate-fade-up text-center">
-            <div className="text-7xl mb-5 animate-heartbeat">💕</div>
-            <h1 className="font-display font-bold text-white mb-1" style={{fontSize:'3.5rem',letterSpacing:'-1.5px',lineHeight:1}}>MissU</h1>
-            <p className="text-white/50 font-display italic text-lg mb-10">พื้นที่พิเศษสำหรับสองคน</p>
+          <div className="animate-fade-up flex flex-col items-center">
 
-            <div className="space-y-3">
+            {/* Logo centered */}
+            <div className="mb-10">
+              <MissULogo iconSize={72} textSize="2.6rem" showTagline={true} dark={false}/>
+            </div>
+
+            {/* Auth options */}
+            <div className="w-full space-y-3">
               {/* Google */}
               <button onClick={handleGoogle} disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-3 py-3.5 rounded-2xl font-semibold text-sm transition-all"
-                style={{background:'white',color:'#3c4043',boxShadow:'0 2px 12px rgba(0,0,0,.2)'}}>
-                {googleLoading ? <div className="w-5 h-5 border-2 border-gray-300 border-t-rose-500 rounded-full animate-spin-slow"/> : <GoogleIcon/>}
+                className="w-full flex items-center justify-center gap-3 font-semibold text-sm transition-all"
+                style={{
+                  background:'white', color:'#3c4043',
+                  borderRadius:14, padding:'0.9rem 1.6rem',
+                  boxShadow:'0 2px 16px rgba(0,0,0,.25)',
+                  border:'none', cursor:'pointer',
+                }}>
+                {googleLoading
+                  ? <div className="w-5 h-5 border-2 border-gray-300 border-t-rose-500 rounded-full animate-spin-slow"/>
+                  : <GoogleIcon/>}
                 {googleLoading ? 'กำลังเข้าสู่ระบบ...' : 'Continue with Google'}
               </button>
 
-              <div className="flex items-center gap-3 py-1">
-                <div className="flex-1 h-px" style={{background:'rgba(255,255,255,.1)'}}/>
-                <span style={{color:'rgba(255,255,255,.3)',fontSize:'.75rem'}}>หรือ</span>
-                <div className="flex-1 h-px" style={{background:'rgba(255,255,255,.1)'}}/>
+              {/* Divider */}
+              <div className="flex items-center gap-3 py-0.5">
+                <div className="flex-1 h-px" style={{background:'rgba(255,255,255,.08)'}}/>
+                <span style={{color:'rgba(255,255,255,.25)',fontSize:'.75rem',fontWeight:600}}>หรือ</span>
+                <div className="flex-1 h-px" style={{background:'rgba(255,255,255,.08)'}}/>
               </div>
 
-              <button onClick={()=>setMode('login')}
-                className="w-full py-3.5 rounded-2xl font-bold text-sm transition-all"
-                style={{background:'linear-gradient(135deg,#f43f5e,#e11d48)',color:'white',boxShadow:'0 4px 16px rgba(244,63,94,.4)'}}>
+              {/* Email login */}
+              <button onClick={() => setMode('login')}
+                className="w-full font-bold text-sm text-white flex items-center justify-center"
+                style={{
+                  background:'linear-gradient(135deg,#e8637a,#d44f66)',
+                  borderRadius:14, padding:'0.9rem 1.6rem', border:'none', cursor:'pointer',
+                  boxShadow:'0 4px 20px rgba(232,99,122,.4)',
+                }}>
                 เข้าสู่ระบบด้วยอีเมล
               </button>
-              <button onClick={()=>setMode('register')}
-                className="w-full py-3.5 rounded-2xl font-bold text-sm transition-all"
-                style={{background:'rgba(255,255,255,.07)',border:'1px solid rgba(255,255,255,.12)',color:'rgba(255,255,255,.85)'}}>
+
+              {/* Register */}
+              <button onClick={() => setMode('register')}
+                className="w-full font-bold text-sm flex items-center justify-center"
+                style={{
+                  background:'rgba(255,255,255,.06)',
+                  border:'1.5px solid rgba(255,255,255,.14)',
+                  color:'rgba(255,255,255,.85)',
+                  borderRadius:14, padding:'0.9rem 1.6rem', cursor:'pointer',
+                }}>
                 สมัครสมาชิกใหม่
               </button>
-              <button onClick={()=>setMode('local')}
-                className="w-full py-3 rounded-2xl font-semibold text-sm transition-all"
-                style={{background:'transparent',border:'1.5px solid rgba(244,63,94,.35)',color:'#fca5a5'}}>
+
+              {/* Local */}
+              <button onClick={() => setMode('local')}
+                className="w-full font-semibold text-sm flex items-center justify-center"
+                style={{
+                  background:'transparent',
+                  border:'1.5px solid rgba(29,160,188,.4)',
+                  color:'rgba(79,195,217,.85)',
+                  borderRadius:14, padding:'0.75rem 1.6rem', cursor:'pointer',
+                }}>
                 ใช้งานแบบออฟไลน์ (Local)
               </button>
             </div>
+
+            <p className="text-center mt-8 text-xs" style={{color:'rgba(255,255,255,.18)'}}>
+              พื้นที่พิเศษสำหรับสองคน
+            </p>
           </div>
+
         ) : (
           /* ── Auth card ── */
-          <div className="animate-scale-in rounded-3xl p-7 relative"
-            style={{background:'rgba(255,255,255,.06)',backdropFilter:'blur(24px)',border:'1px solid rgba(255,255,255,.1)'}}>
+          <div className="animate-scale-in rounded-3xl relative overflow-hidden"
+            style={{
+              background:'rgba(255,255,255,.06)',
+              backdropFilter:'blur(28px)',
+              WebkitBackdropFilter:'blur(28px)',
+              border:'1px solid rgba(255,255,255,.10)',
+              padding:'2rem',
+            }}>
 
-            <button onClick={()=>{setMode(null);setError('');}}
-              className="flex items-center gap-1.5 text-sm mb-5 transition-colors"
-              style={{color:'rgba(255,255,255,.4)'}}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-              กลับ
+            {/* Card inner top glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-px"
+              style={{background:'linear-gradient(90deg,transparent,rgba(29,160,188,.4),transparent)'}}/>
+
+            {/* Back */}
+            <button onClick={() => { setMode(null); setError(''); }}
+              className="flex items-center gap-1.5 text-sm mb-6 transition-colors"
+              style={{color:'rgba(255,255,255,.35)',background:'none',border:'none',cursor:'pointer',padding:0}}>
+              <BackIcon/> กลับ
             </button>
 
+            {/* Header */}
             <div className="text-center mb-6">
-              <div className="text-4xl mb-2">{mode==='login'?'🔑':mode==='register'?'✨':'📱'}</div>
-              <h2 className="font-display text-2xl font-semibold text-white">
-                {mode==='login'?'ยินดีต้อนรับกลับ':mode==='register'?'เริ่มต้นใหม่':'ใช้งานแบบ Local'}
+              <div className="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center text-3xl"
+                style={{
+                  background: mode === 'local'
+                    ? 'rgba(29,160,188,.12)'
+                    : mode === 'login'
+                    ? 'rgba(232,99,122,.12)'
+                    : 'rgba(29,160,188,.12)',
+                  border: '1px solid rgba(255,255,255,.08)',
+                }}>
+                {mode === 'login' ? '🔑' : mode === 'register' ? '✨' : '📱'}
+              </div>
+              <h2 style={{fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:'1.4rem',color:'white',letterSpacing:'-0.3px'}}>
+                {mode === 'login' ? 'ยินดีต้อนรับกลับ' : mode === 'register' ? 'เริ่มต้นใหม่' : 'ใช้งานแบบ Local'}
               </h2>
+              <p style={{color:'rgba(255,255,255,.35)',fontSize:'.82rem',marginTop:4}}>
+                {mode === 'login' ? 'เข้าสู่ระบบเพื่อใช้งาน' : mode === 'register' ? 'สร้างบัญชีใหม่' : 'ไม่ต้องสมัครสมาชิก'}
+              </p>
             </div>
 
-            {/* Google button (login/register only) */}
+            {/* Google (login/register only) */}
             {mode !== 'local' && (
               <>
                 <button onClick={handleGoogle} disabled={googleLoading}
-                  className="w-full flex items-center justify-center gap-2.5 py-3 rounded-2xl text-sm font-semibold mb-4 transition-all"
-                  style={{background:'white',color:'#3c4043',boxShadow:'0 2px 12px rgba(0,0,0,.2)'}}>
-                  {googleLoading ? <div className="w-4 h-4 border-2 border-gray-300 border-t-rose-500 rounded-full animate-spin-slow"/> : <GoogleIcon/>}
+                  className="w-full flex items-center justify-center gap-2.5 font-semibold text-sm mb-5 transition-all"
+                  style={{
+                    background:'white',color:'#3c4043',borderRadius:12,
+                    padding:'.8rem 1.2rem',border:'none',cursor:'pointer',
+                    boxShadow:'0 2px 12px rgba(0,0,0,.2)',
+                  }}>
+                  {googleLoading
+                    ? <div className="w-4 h-4 border-2 border-gray-300 border-t-rose-500 rounded-full animate-spin-slow"/>
+                    : <GoogleIcon/>}
                   Continue with Google
                 </button>
-                <div className="divider mb-4" style={{color:'rgba(255,255,255,.25)'}}>
-                  <div className="flex-1 h-px" style={{background:'rgba(255,255,255,.1)'}}/>
-                  <span className="text-xs px-2">หรือใช้อีเมล</span>
-                  <div className="flex-1 h-px" style={{background:'rgba(255,255,255,.1)'}}/>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex-1 h-px" style={{background:'rgba(255,255,255,.08)'}}/>
+                  <span style={{color:'rgba(255,255,255,.25)',fontSize:'.73rem',fontWeight:600}}>หรือใช้อีเมล</span>
+                  <div className="flex-1 h-px" style={{background:'rgba(255,255,255,.08)'}}/>
                 </div>
               </>
             )}
 
+            {/* Error */}
             {error && (
-              <div className="mb-4 py-2.5 px-4 rounded-xl text-sm text-center"
-                style={{background:'rgba(244,63,94,.15)',border:'1px solid rgba(244,63,94,.3)',color:'#fca5a5'}}>
+              <div className="mb-4 py-2.5 px-4 rounded-2xl text-sm text-center"
+                style={{background:'rgba(232,99,122,.15)',border:'1px solid rgba(232,99,122,.3)',color:'#ffb3bf'}}>
                 {error}
               </div>
             )}
 
+            {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-3">
-              {(mode==='register'||mode==='local') && (
+              {(mode === 'register' || mode === 'local') && (
                 <div>
-                  <label className="input-label" style={{color:'rgba(255,255,255,.4)'}}>ชื่อเล่น</label>
-                  <input value={name} onChange={e=>setName(e.target.value)} placeholder="ชื่อของคุณ" required
-                    className="w-full rounded-2xl px-4 py-3 text-sm outline-none text-white placeholder-white/20"
-                    style={{background:'rgba(255,255,255,.07)',border:'1.5px solid rgba(255,255,255,.12)'}}/>
+                  <label className="input-label" style={{color:'rgba(255,255,255,.35)'}}>ชื่อเล่น</label>
+                  <input value={name} onChange={e => setName(e.target.value)}
+                    placeholder="ชื่อของคุณ" required
+                    className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
+                    style={{
+                      fontFamily:"'Nunito',sans-serif",
+                      background:'rgba(255,255,255,.07)',
+                      border:'1.5px solid rgba(255,255,255,.10)',
+                      color:'white',
+                    }}/>
                 </div>
               )}
-              {mode==='local' && (
+              {mode === 'local' && (
                 <div>
-                  <label className="input-label" style={{color:'rgba(255,255,255,.4)'}}>เลือก Emoji</label>
+                  <label className="input-label" style={{color:'rgba(255,255,255,.35)'}}>เลือก Emoji</label>
                   <div className="flex flex-wrap gap-2">
-                    {EMOJIS.map(e=>(
-                      <button key={e} type="button" onClick={()=>setEmoji(e)}
-                        className={`text-xl p-2 rounded-xl transition-all ${emoji===e?'scale-125 shadow-lg':'opacity-50 hover:opacity-100'}`}
-                        style={emoji===e?{background:'rgba(255,255,255,.15)'}:{background:'rgba(255,255,255,.05)'}}>
+                    {EMOJIS.map(e => (
+                      <button key={e} type="button" onClick={() => setEmoji(e)}
+                        className="text-xl p-2 rounded-xl transition-all"
+                        style={emoji === e
+                          ? {background:'rgba(255,255,255,.18)',transform:'scale(1.2)'}
+                          : {background:'rgba(255,255,255,.05)',opacity:.5}}>
                         {e}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
-              {mode!=='local' && (
+              {mode !== 'local' && (
                 <>
                   <div>
-                    <label className="input-label" style={{color:'rgba(255,255,255,.4)'}}>อีเมล</label>
-                    <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" required
-                      className="w-full rounded-2xl px-4 py-3 text-sm outline-none text-white placeholder-white/20"
-                      style={{background:'rgba(255,255,255,.07)',border:'1.5px solid rgba(255,255,255,.12)'}}/>
+                    <label className="input-label" style={{color:'rgba(255,255,255,.35)'}}>อีเมล</label>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                      placeholder="you@example.com" required
+                      className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
+                      style={{
+                        fontFamily:"'Nunito',sans-serif",
+                        background:'rgba(255,255,255,.07)',
+                        border:'1.5px solid rgba(255,255,255,.10)',
+                        color:'white',
+                      }}/>
                   </div>
                   <div>
-                    <label className="input-label" style={{color:'rgba(255,255,255,.4)'}}>รหัสผ่าน</label>
-                    <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" required minLength={6}
-                      className="w-full rounded-2xl px-4 py-3 text-sm outline-none text-white placeholder-white/20"
-                      style={{background:'rgba(255,255,255,.07)',border:'1.5px solid rgba(255,255,255,.12)'}}/>
+                    <label className="input-label" style={{color:'rgba(255,255,255,.35)'}}>รหัสผ่าน</label>
+                    <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+                      placeholder="••••••••" required minLength={6}
+                      className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
+                      style={{
+                        fontFamily:"'Nunito',sans-serif",
+                        background:'rgba(255,255,255,.07)',
+                        border:'1.5px solid rgba(255,255,255,.10)',
+                        color:'white',
+                      }}/>
                   </div>
                 </>
               )}
               <div className="pt-1">
                 <button type="submit" disabled={loading}
-                  className="w-full py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all"
-                  style={{background:'linear-gradient(135deg,#f43f5e,#e11d48)',boxShadow:'0 4px 16px rgba(244,63,94,.4)',opacity:loading?0.7:1}}>
+                  className="w-full py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2"
+                  style={{
+                    background:'linear-gradient(135deg,#e8637a,#d44f66)',
+                    boxShadow:'0 4px 20px rgba(232,99,122,.4)',
+                    border:'none', cursor:'pointer',
+                    opacity: loading ? 0.7 : 1,
+                  }}>
                   {loading && <div className="spinner"/>}
-                  {loading ? 'กำลังดำเนินการ...' : mode==='login'?'เข้าสู่ระบบ':mode==='register'?'สร้างบัญชี':'เริ่มต้นเลย'}
+                  {loading ? 'กำลังดำเนินการ...'
+                    : mode === 'login' ? 'เข้าสู่ระบบ'
+                    : mode === 'register' ? 'สร้างบัญชี'
+                    : 'เริ่มต้นเลย'}
                 </button>
               </div>
             </form>
 
-            {mode==='login' && (
-              <p className="text-center text-xs mt-4" style={{color:'rgba(255,255,255,.3)'}}>
+            {mode === 'login' && (
+              <p className="text-center text-xs mt-4" style={{color:'rgba(255,255,255,.25)'}}>
                 ยังไม่มีบัญชี?{' '}
-                <button onClick={()=>{setMode('register');setError('');}} className="font-bold" style={{color:'#fca5a5'}}>
+                <button onClick={() => { setMode('register'); setError(''); }}
+                  className="font-bold" style={{color:'#ffb3bf',background:'none',border:'none',cursor:'pointer'}}>
                   สมัครสมาชิก
                 </button>
               </p>
