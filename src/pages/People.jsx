@@ -4,7 +4,7 @@ import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/f
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
-import { FiSearch, FiUserPlus, FiUserCheck, FiUsers, FiCheck, FiX } from 'react-icons/fi';
+import { FiSearch, FiUserPlus, FiUserCheck, FiUsers, FiCheck, FiX, FiChevronRight } from 'react-icons/fi';
 
 function Avatar({ user, size = 40 }) {
   if (user?.photoURL) return (
@@ -30,7 +30,6 @@ export default function People() {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState({});
 
-  // Listen to incoming friend requests
   useEffect(() => {
     if (!currentUser) return;
     const q = query(
@@ -43,17 +42,14 @@ export default function People() {
     });
   }, [currentUser]);
 
-  // Load friends when on friends tab
   useEffect(() => {
     if (tab !== 'friends' || !currentUser) return;
     getFriends(currentUser.uid).then(setFriends);
   }, [tab, currentUser]);
 
-  // Search
   useEffect(() => {
     if (tab !== 'discover') return;
     if (!search.trim()) {
-      // Show recent users when no search
       const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(20));
       const unsub = onSnapshot(q, snap => {
         const users = snap.docs.map(d => d.data()).filter(u => u.uid !== currentUser?.uid);
@@ -104,88 +100,118 @@ export default function People() {
 
   const pendingCount = incomingFriendReqs.length;
 
+  const TABS = [
+    { id: 'discover', label: 'ค้นหา',   Icon: FiSearch },
+    { id: 'requests', label: 'คำขอ',    Icon: FiUserPlus, badge: pendingCount },
+    { id: 'friends',  label: 'เพื่อน',  Icon: FiUsers },
+  ];
+
   return (
-    <div className="min-h-screen" style={{ background: '#f8f5f7', paddingBottom: 80 }}>
+    <div className="min-h-screen" style={{ background: '#f4eef8', paddingBottom: 90 }}>
       <Navbar />
-      <div className="max-w-lg mx-auto px-4 py-6">
+      <div className="max-w-lg mx-auto px-4 py-5">
 
         {/* Header */}
         <div className="mb-5">
-          <h1 className="text-2xl font-bold text-slate-800">คนรู้จัก</h1>
-          <p className="text-sm text-slate-400 mt-1">ค้นหาและเพิ่มเพื่อนในระบบ</p>
+          <h1 className="text-xl font-bold text-slate-800">คนรู้จัก</h1>
+          <p className="text-slate-400" style={{ fontSize: '0.82rem', marginTop: 2 }}>ค้นหาและเพิ่มเพื่อนในระบบ</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-5 p-1 rounded-2xl" style={{ background: '#f0eaf2' }}>
-          {[
-            { id: 'discover', label: 'ค้นหา', icon: <FiSearch size={14} /> },
-            { id: 'requests', label: `คำขอ${pendingCount > 0 ? ` (${pendingCount})` : ''}`, icon: <FiUserPlus size={14} /> },
-            { id: 'friends', label: 'เพื่อน', icon: <FiUsers size={14} /> },
-          ].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-xs transition-all"
-              style={{
-                background: tab === t.id ? 'white' : 'transparent',
-                color: tab === t.id ? '#e8637a' : '#9ca3af',
-                boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-              }}>
-              {t.icon} {t.label}
-            </button>
-          ))}
+        <div className="flex gap-2 mb-5 p-1 rounded-2xl" style={{ background: '#ece4f0' }}>
+          {TABS.map(({ id, label, Icon, badge }) => {
+            const isActive = tab === id;
+            return (
+              <button key={id} onClick={() => setTab(id)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold transition-all"
+                style={{
+                  fontSize: '0.82rem',
+                  background: isActive ? 'white' : 'transparent',
+                  color: isActive ? '#e8637a' : '#9ca3af',
+                  boxShadow: isActive ? '0 2px 10px rgba(232,99,122,0.12)' : 'none',
+                  position: 'relative',
+                }}>
+                <Icon size={14} />
+                {label}
+                {badge > 0 && (
+                  <span className="w-4 h-4 rounded-full text-white flex items-center justify-center font-black"
+                    style={{ fontSize: '0.55rem', background: '#e8637a' }}>
+                    {badge > 9 ? '9+' : badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Discover Tab */}
         {tab === 'discover' && (
           <div>
             <div className="relative mb-4">
-              <FiSearch size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+              <FiSearch size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="ค้นหาชื่อผู้ใช้..."
-                className="w-full pl-10 pr-4 py-3 rounded-2xl text-sm outline-none"
-                style={{ background: 'white', border: '1.5px solid #f0eaf2', color: '#1f2937' }}
+                className="w-full pl-10 pr-4 py-3 rounded-2xl outline-none"
+                style={{ background: 'white', border: '1.5px solid #ede5f5', color: '#1f2937', fontSize: '0.88rem',
+                  boxShadow: '0 1px 8px rgba(244,63,94,0.04)' }}
               />
             </div>
 
             {loading ? (
-              <div className="flex justify-center py-10">
+              <div className="flex justify-center py-12">
                 <div className="w-7 h-7 border-2 border-rose-200 border-t-rose-400 rounded-full animate-spin-slow" />
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {results.length === 0 && search && (
-                  <p className="text-center text-slate-400 py-10">ไม่พบผู้ใช้ชื่อ "{search}"</p>
+                  <div className="text-center py-12 card">
+                    <div className="text-4xl mb-3">🔍</div>
+                    <p className="font-semibold text-slate-500" style={{ fontSize: '0.9rem' }}>ไม่พบผู้ใช้ชื่อ "{search}"</p>
+                  </div>
                 )}
                 {results.map(user => {
                   const status = statusMap[user.uid] || 'none';
                   return (
-                    <div key={user.uid} className="card flex items-center gap-3 px-4 py-3">
-                      <Link to={`/profile/${user.uid}`}>
-                        <Avatar user={user} size={48} />
+                    <div key={user.uid} className="card flex items-center gap-3 px-4 py-3"
+                      style={{ boxShadow: '0 1px 10px rgba(244,63,94,0.05)' }}>
+                      <Link to={`/profile/${user.uid}`} className="flex-shrink-0">
+                        <Avatar user={user} size={50} />
                       </Link>
                       <div className="flex-1 min-w-0">
                         <Link to={`/profile/${user.uid}`}>
-                          <p className="font-bold text-slate-800 text-sm truncate">{user.displayName}</p>
+                          <p className="font-bold text-slate-800 truncate" style={{ fontSize: '0.92rem' }}>{user.displayName}</p>
                         </Link>
-                        {user.bio && <p className="text-xs text-slate-400 truncate">{user.bio}</p>}
+                        {user.bio
+                          ? <p className="text-slate-400 truncate" style={{ fontSize: '0.78rem', marginTop: 1 }}>{user.bio}</p>
+                          : <p className="text-slate-300" style={{ fontSize: '0.78rem', marginTop: 1 }}>ไม่มีไบโอ</p>
+                        }
                       </div>
+
                       {status === 'none' && (
                         <button onClick={() => handleAdd(user)} disabled={actionLoading[user.uid]}
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-semibold text-xs text-white transition-all"
-                          style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)', minWidth: 80 }}>
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold text-white transition-all active:scale-95 flex-shrink-0"
+                          style={{
+                            background: 'linear-gradient(135deg,#f43f5e,#a855f7)',
+                            fontSize: '0.82rem',
+                            boxShadow: '0 3px 10px rgba(244,63,94,0.25)',
+                            minWidth: 72,
+                          }}>
                           {actionLoading[user.uid]
                             ? <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin-slow" />
                             : <><FiUserPlus size={13} /> แอด</>}
                         </button>
                       )}
                       {status === 'sent' && (
-                        <span className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-400"
-                          style={{ background: '#f3f4f6' }}>ส่งแล้ว</span>
+                        <span className="px-3 py-2 rounded-xl font-semibold flex-shrink-0"
+                          style={{ background: '#f3f4f6', color: '#9ca3af', fontSize: '0.8rem' }}>
+                          ส่งแล้ว
+                        </span>
                       )}
                       {status === 'friends' && (
-                        <span className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold"
-                          style={{ background: '#f0fdf4', color: '#16a34a' }}>
+                        <span className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-semibold flex-shrink-0"
+                          style={{ background: '#f0fdf4', color: '#16a34a', fontSize: '0.8rem' }}>
                           <FiUserCheck size={13} /> เพื่อน
                         </span>
                       )}
@@ -194,9 +220,9 @@ export default function People() {
                           const req = incomingFriendReqs.find(r => r.fromUid === user.uid);
                           if (req) handleAccept(req);
                         }}
-                          className="px-3 py-2 rounded-xl text-xs font-semibold text-white"
-                          style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)' }}>
-                          รับ
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-white flex-shrink-0 active:scale-95 transition-all"
+                          style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)', fontSize: '0.8rem' }}>
+                          <FiCheck size={13} /> รับ
                         </button>
                       )}
                     </div>
@@ -209,69 +235,107 @@ export default function People() {
 
         {/* Requests Tab */}
         {tab === 'requests' && (
-          <div className="space-y-3">
+          <div>
             {incomingFriendReqs.length === 0 ? (
-              <div className="text-center py-12">
-                <FiUserPlus size={48} className="mx-auto text-slate-200 mb-3" />
-                <p className="text-slate-400 text-sm">ไม่มีคำขอเพื่อน</p>
+              <div className="text-center py-16 card">
+                <div className="text-5xl mb-4">📭</div>
+                <p className="font-bold text-slate-600 mb-1">ไม่มีคำขอเพื่อน</p>
+                <p className="text-slate-400" style={{ fontSize: '0.82rem' }}>เมื่อมีคนส่งคำขอ จะแสดงที่นี่</p>
               </div>
-            ) : incomingFriendReqs.map(req => (
-              <div key={req.id} className="card flex items-center gap-3 px-4 py-3">
-                <Link to={`/profile/${req.fromUid}`}>
-                  <Avatar user={{ photoURL: req.fromPhoto, avatarEmoji: req.fromEmoji }} size={48} />
-                </Link>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-800 text-sm">{req.fromName}</p>
-                  <p className="text-xs text-slate-400">ส่งคำขอเพื่อน</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handleAccept(req)} disabled={actionLoading[req.id]}
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-white"
-                    style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)' }}>
-                    {actionLoading[req.id]
-                      ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin-slow" />
-                      : <FiCheck size={16} />}
-                  </button>
-                  <button onClick={() => handleDecline(req)} disabled={actionLoading[req.id]}
-                    className="w-9 h-9 rounded-full flex items-center justify-center"
-                    style={{ background: '#fef2f2', color: '#ef4444' }}>
-                    <FiX size={16} />
-                  </button>
-                </div>
+            ) : (
+              <div className="space-y-2.5">
+                <p className="text-slate-500 font-semibold mb-3" style={{ fontSize: '0.82rem' }}>
+                  {incomingFriendReqs.length} คำขอที่รอการตอบรับ
+                </p>
+                {incomingFriendReqs.map(req => (
+                  <div key={req.id} className="card px-4 py-3"
+                    style={{ boxShadow: '0 1px 10px rgba(244,63,94,0.05)' }}>
+                    <div className="flex items-center gap-3">
+                      <Link to={`/profile/${req.fromUid}`} className="flex-shrink-0">
+                        <Avatar user={{ photoURL: req.fromPhoto, avatarEmoji: req.fromEmoji }} size={50} />
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-slate-800" style={{ fontSize: '0.92rem' }}>{req.fromName}</p>
+                        <p className="text-slate-400" style={{ fontSize: '0.78rem', marginTop: 1 }}>ส่งคำขอเป็นเพื่อน</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <button onClick={() => handleAccept(req)} disabled={actionLoading[req.id]}
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-white transition-all active:scale-95"
+                        style={{
+                          background: actionLoading[req.id] ? '#e5e7eb' : 'linear-gradient(135deg,#22c55e,#16a34a)',
+                          fontSize: '0.85rem',
+                          boxShadow: actionLoading[req.id] ? 'none' : '0 3px 10px rgba(34,197,94,0.25)',
+                        }}>
+                        {actionLoading[req.id]
+                          ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin-slow" />
+                          : <><FiCheck size={15} /> รับเป็นเพื่อน</>}
+                      </button>
+                      <button onClick={() => handleDecline(req)} disabled={actionLoading[req.id]}
+                        className="flex items-center justify-center px-4 py-2.5 rounded-xl font-semibold transition-all active:scale-95"
+                        style={{ background: '#fef2f2', color: '#ef4444', fontSize: '0.85rem' }}>
+                        <FiX size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
 
         {/* Friends Tab */}
         {tab === 'friends' && (
-          <div className="space-y-3">
+          <div>
             {friends.length === 0 ? (
-              <div className="text-center py-12">
-                <FiUsers size={48} className="mx-auto text-slate-200 mb-3" />
-                <p className="text-slate-400 text-sm">ยังไม่มีเพื่อน</p>
-                <button onClick={() => setTab('discover')} className="mt-3 text-sm font-bold"
-                  style={{ color: '#e8637a', background: 'none', border: 'none', cursor: 'pointer' }}>
-                  ค้นหาเพื่อน →
+              <div className="text-center py-16 card">
+                <div className="text-5xl mb-4">👥</div>
+                <p className="font-bold text-slate-600 mb-1">ยังไม่มีเพื่อน</p>
+                <p className="text-slate-400 mb-4" style={{ fontSize: '0.82rem' }}>ค้นหาและเพิ่มเพื่อนใหม่ได้เลย</p>
+                <button onClick={() => setTab('discover')}
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-2xl font-bold text-white transition-all active:scale-95"
+                  style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)', fontSize: '0.85rem',
+                    boxShadow: '0 4px 14px rgba(244,63,94,0.3)' }}>
+                  <FiSearch size={14} /> ค้นหาเพื่อน
                 </button>
               </div>
-            ) : friends.map(friend => (
-              <div key={friend.uid} className="card flex items-center gap-3 px-4 py-3">
-                <Link to={`/profile/${friend.uid}`}>
-                  <Avatar user={friend} size={48} />
-                </Link>
-                <div className="flex-1 min-w-0">
-                  <Link to={`/profile/${friend.uid}`}>
-                    <p className="font-bold text-slate-800 text-sm truncate">{friend.displayName}</p>
-                  </Link>
-                  {friend.bio && <p className="text-xs text-slate-400 truncate">{friend.bio}</p>}
+            ) : (
+              <>
+                <p className="text-slate-500 font-semibold mb-3" style={{ fontSize: '0.82rem' }}>
+                  {friends.length} เพื่อน
+                </p>
+                <div className="space-y-2.5">
+                  {friends.map(friend => (
+                    <div key={friend.uid} className="card flex items-center gap-3 px-4 py-3"
+                      style={{ boxShadow: '0 1px 10px rgba(244,63,94,0.05)' }}>
+                      <Link to={`/profile/${friend.uid}`} className="flex-shrink-0">
+                        <Avatar user={friend} size={50} />
+                      </Link>
+                      <div className="flex-1 min-w-0">
+                        <Link to={`/profile/${friend.uid}`}>
+                          <p className="font-bold text-slate-800 truncate" style={{ fontSize: '0.92rem' }}>{friend.displayName}</p>
+                        </Link>
+                        {friend.bio && (
+                          <p className="text-slate-400 truncate" style={{ fontSize: '0.78rem', marginTop: 1 }}>{friend.bio}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Link to={`/profile/${friend.uid}`}
+                          className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+                          style={{ background: '#f8f4fb', color: '#a855f7' }}>
+                          <FiChevronRight size={16} />
+                        </Link>
+                        <button onClick={() => handleRemoveFriend(friend.uid)}
+                          className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors hover:bg-red-50"
+                          style={{ background: '#fef2f2', color: '#ef4444' }}>
+                          <FiX size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <button onClick={() => handleRemoveFriend(friend.uid)}
-                  className="p-2 rounded-xl text-slate-300 hover:text-red-400 transition-colors">
-                  <FiX size={16} />
-                </button>
-              </div>
-            ))}
+              </>
+            )}
           </div>
         )}
 
