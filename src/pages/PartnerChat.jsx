@@ -201,6 +201,12 @@ export default function Chat() {
     }
   }, []);
 
+  /* ── Mark as read when opening partner chat ── */
+  useEffect(() => {
+    if (!chatId) return;
+    localStorage.setItem(`missu_lastRead_${chatId}`, Date.now().toString());
+  }, [chatId]);
+
   /* ── Messages listener ── */
   useEffect(() => {
     if (!chatId) { setLoadingMsgs(false); return; }
@@ -228,6 +234,7 @@ export default function Chat() {
     const isNew = Date.now() - last.timestamp < 8000;
     const fromPartner = last.senderId !== currentUser.uid;
     if (isNew && fromPartner && messages.length > prevCount.current && prevCount.current > 0) {
+      if (chatId) localStorage.setItem(`missu_lastRead_${chatId}`, Date.now().toString());
       if (Notification.permission === 'granted') {
         const body = last.type === 'heart' ? 'ส่งความรักมาให้'
           : last.type === 'image' ? 'ส่งรูปมาให้'

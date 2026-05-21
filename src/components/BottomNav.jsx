@@ -1,15 +1,17 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { ref, onValue, query as rtdbQuery, limitToLast } from 'firebase/database';
+import { db, rtdb } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { FiHome, FiMessageCircle, FiUsers, FiRss, FiUser } from 'react-icons/fi';
 
 export default function BottomNav() {
-  const { currentUser, userProfile, incomingRequests, isLocal } = useAuth();
+  const { currentUser, userProfile, incomingRequests, isLocal, getFriends } = useAuth();
   const location = useLocation();
   const active = location.pathname;
   const [friendReqCount, setFriendReqCount] = useState(0);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
 
   const hasPartner = isLocal || !!userProfile?.partnerId;
   const pendingCount = isLocal ? 0 : incomingRequests.length;
@@ -25,10 +27,47 @@ export default function BottomNav() {
     return onSnapshot(q, snap => setFriendReqCount(snap.size));
   }, [currentUser, isLocal]);
 
+  // Unread chat count
+  useEffect(() => {
+    if (!currentUser || isLocal) return;
+    let unsubs = [];
+    const msgMap = {};
+
+    getFriends(currentUser.uid).then(friends => {
+      const allIds = [
+        ...(userProfile?.partnerId ? [[currentUser.uid, userProfile.partnerId].sort().join('_')] : []),
+        ...friends.map(f => [currentUser.uid, f.uid].sort().join('_')),
+      ];
+
+      function recount() {
+        let total = 0;
+        allIds.forEach(id => {
+          const msg = msgMap[id];
+          if (!msg || msg.senderId === currentUser.uid) return;
+          const lastRead = parseInt(localStorage.getItem(`missu_lastRead_${id}`) || '0');
+          if (msg.timestamp > lastRead) total++;
+        });
+        setUnreadChatCount(total);
+      }
+
+      unsubs = allIds.map(cid => {
+        const q = rtdbQuery(ref(rtdb, `chats/${cid}/messages`), limitToLast(1));
+        return onValue(q, snap => {
+          const data = snap.val();
+          if (data) msgMap[cid] = Object.values(data)[0];
+          else delete msgMap[cid];
+          recount();
+        });
+      });
+    });
+
+    return () => unsubs.forEach(u => u());
+  }, [currentUser, isLocal, userProfile?.partnerId]);
+
   const TABS = [
     { to: '/dashboard', label: 'หน้าหลัก', Icon: FiHome },
     { to: '/feed',      label: 'ฟีด',      Icon: FiRss },
-    { to: '/chat',      label: 'แชท',      Icon: FiMessageCircle },
+    { to: '/chat',      label: 'แชท',      Icon: FiMessageCircle, badge: unreadChatCount },
     { to: '/people',    label: 'คนรู้จัก', Icon: FiUsers, badge: friendReqCount },
     { to: '/profile',   label: 'โปรไฟล์',  Icon: FiUser },
   ];

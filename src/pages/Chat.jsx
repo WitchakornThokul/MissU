@@ -27,6 +27,31 @@ function fmtTime(ts) {
   return new Date(ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
 }
 
+function UnreadDot({ chatId, currentUid }) {
+  const [unread, setUnread] = useState(false);
+  useEffect(() => {
+    if (!chatId) return;
+    const q = query(ref(rtdb, `chats/${chatId}/messages`), limitToLast(1));
+    const unsub = onValue(q, snap => {
+      const data = snap.val();
+      if (!data) { setUnread(false); return; }
+      const msg = Object.values(data)[0];
+      if (!msg || msg.senderId === currentUid) { setUnread(false); return; }
+      const lastRead = parseInt(localStorage.getItem(`missu_lastRead_${chatId}`) || '0');
+      setUnread(msg.timestamp > lastRead);
+    });
+    return () => unsub();
+  }, [chatId, currentUid]);
+  if (!unread) return null;
+  return (
+    <span style={{
+      width: 10, height: 10, borderRadius: '50%',
+      background: '#f43f5e', flexShrink: 0, display: 'inline-block',
+      boxShadow: '0 0 0 2px white',
+    }} />
+  );
+}
+
 function LastMessagePreview({ chatId, currentUid }) {
   const [last, setLast] = useState(null);
 
@@ -150,8 +175,9 @@ export default function Chat() {
                   <LastMessagePreview chatId={partnerChatId} currentUid={currentUser.uid} />
                 </div>
 
-                <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                <div style={{ flexShrink: 0, textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                   <LastMessageTime chatId={partnerChatId} />
+                  <UnreadDot chatId={partnerChatId} currentUid={currentUser.uid} />
                 </div>
               </Link>
             </>
@@ -191,8 +217,9 @@ export default function Chat() {
                       <LastMessagePreview chatId={chatId} currentUid={currentUser.uid} />
                     </div>
 
-                    <div style={{ flexShrink: 0 }}>
+                    <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                       <LastMessageTime chatId={chatId} />
+                      <UnreadDot chatId={chatId} currentUid={currentUser.uid} />
                     </div>
                   </Link>
                 );

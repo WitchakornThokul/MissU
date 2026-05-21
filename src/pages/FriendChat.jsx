@@ -167,9 +167,41 @@ export default function FriendChat() {
     return () => unsub();
   }, [chatId]);
 
-  // Scroll to bottom
+  // Request notification permission
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Mark as read when opening chat
+  useEffect(() => {
+    if (!chatId) return;
+    localStorage.setItem(`missu_lastRead_${chatId}`, Date.now().toString());
+  }, [chatId]);
+
+  // Scroll to bottom + push notification for new messages
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: prevCount.current === 0 ? 'auto' : 'smooth' });
+
+    if (messages.length && currentUser) {
+      const last = messages[messages.length - 1];
+      const isNew = Date.now() - last.timestamp < 8000;
+      const fromFriend = last.senderId !== currentUser.uid;
+      if (isNew && fromFriend && messages.length > prevCount.current && prevCount.current > 0) {
+        // Mark as read (user is viewing)
+        if (chatId) localStorage.setItem(`missu_lastRead_${chatId}`, Date.now().toString());
+        if (Notification.permission === 'granted') {
+          const body = last.type === 'heart' ? 'ส่งความรักมาให้'
+            : last.type === 'image' ? 'ส่งรูปมาให้'
+            : last.text;
+          new Notification(last.senderName || friendProfile?.displayName || 'เพื่อน', {
+            body, icon: '/favicon.ico',
+          });
+        }
+      }
+    }
+
     prevCount.current = messages.length;
   }, [messages]);
 
