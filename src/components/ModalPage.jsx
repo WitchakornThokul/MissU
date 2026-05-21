@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 
@@ -11,6 +12,23 @@ import { FiArrowLeft } from 'react-icons/fi';
  */
 export default function ModalPage({ title, subtitle, from, to, bg, children, actionBtn }) {
   const navigate = useNavigate();
+  const [kbOffset, setKbOffset] = useState(0);
+
+  useEffect(() => {
+    if (!window.visualViewport) return;
+    function update() {
+      const vv = window.visualViewport;
+      const hidden = window.innerHeight - (vv.height + vv.offsetTop);
+      setKbOffset(Math.max(0, hidden));
+    }
+    window.visualViewport.addEventListener('resize', update);
+    window.visualViewport.addEventListener('scroll', update);
+    return () => {
+      window.visualViewport.removeEventListener('resize', update);
+      window.visualViewport.removeEventListener('scroll', update);
+    };
+  }, []);
+
   return (
     <>
       <div
@@ -27,6 +45,8 @@ export default function ModalPage({ title, subtitle, from, to, bg, children, act
           height: '92vh',
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden',
+          transform: `translateY(-${kbOffset}px)`,
+          transition: 'transform 0.2s ease',
         }}
       >
         {/* Drag handle */}

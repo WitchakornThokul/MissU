@@ -49,7 +49,23 @@ export default function LoveLetters() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(null);
   const [showWrite, setShowWrite] = useState(false);
+  const [kbOffset, setKbOffset] = useState(0);
   const prevLen = useRef(0);
+
+  useEffect(() => {
+    if (!window.visualViewport) return;
+    function update() {
+      const vv = window.visualViewport;
+      const hidden = window.innerHeight - (vv.height + vv.offsetTop);
+      setKbOffset(Math.max(0, hidden));
+    }
+    window.visualViewport.addEventListener('resize', update);
+    window.visualViewport.addEventListener('scroll', update);
+    return () => {
+      window.visualViewport.removeEventListener('resize', update);
+      window.visualViewport.removeEventListener('scroll', update);
+    };
+  }, []);
 
   useEffect(() => {
     if (!coupleId) return;
@@ -97,6 +113,8 @@ export default function LoveLetters() {
         height: '92vh',
         display: 'flex', flexDirection: 'column',
         overflow: 'hidden',
+        transform: `translateY(-${kbOffset}px)`,
+        transition: 'transform 0.2s ease',
       }}>
         {/* Header */}
         <div style={{
