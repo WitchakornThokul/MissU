@@ -96,7 +96,7 @@ export default function Countdown() {
       <Navbar />
       <PageHeader icon={FiClock} title="นับวัน" subtitle="ทุกวันมีความหมาย" from="#7c3aed" to="#a855f7" />
 
-      <div className="max-w-2xl mx-auto px-4 -mt-6 pb-24">
+      <div className="max-w-2xl mx-auto px-4 -mt-6 pb-28 md:pb-12">
         {relDays !== null && (
           <div className="rounded-3xl p-7 text-center text-white mb-5 relative overflow-hidden shadow-xl"
             style={{ background: 'linear-gradient(135deg,#7c3aed,#a855f7,#ec4899)' }}>

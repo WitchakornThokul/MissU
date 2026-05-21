@@ -73,7 +73,7 @@ export default function LoveQuiz() {
       <Navbar />
       <PageHeader emoji="❓" title="รู้จักกันดีแค่ไหน" subtitle="ทดสอบว่าเข้าใจกันมากแค่ไหน" grad="from-blue-400 to-indigo-500" />
 
-      <div className="max-w-lg mx-auto px-4 -mt-6 pb-10">
+      <div className="max-w-lg mx-auto px-4 -mt-6 pb-28 md:pb-12">
         {mode==='menu' && (
           <div className="card-love p-8 text-center animate-fade-up shadow-xl">
             <div className="text-6xl mb-4 animate-bounce-gentle">❓</div>

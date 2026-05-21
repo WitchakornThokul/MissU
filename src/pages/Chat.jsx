@@ -181,9 +181,13 @@ export default function Chat() {
   useEffect(() => {
     if (!currentUser) return;
     const myRef = ref(rtdb, `presence/${currentUser.uid}`);
-    set(myRef, { online: true, lastSeen: Date.now() });
+    set(myRef, { online: true, lastSeen: Date.now() }).catch(err => {
+      console.error('Error setting presence:', err);
+    });
     onDisconnect(myRef).set({ online: false, lastSeen: Date.now() });
-    return () => { set(myRef, { online: false, lastSeen: Date.now() }); };
+    return () => {
+      set(myRef, { online: false, lastSeen: Date.now() }).catch(() => {});
+    };
   }, [currentUser]);
 
   useEffect(() => {
@@ -192,6 +196,8 @@ export default function Chat() {
       const d = snap.val();
       setPartnerOnline(d?.online === true);
       setPartnerLastSeen(d?.lastSeen || null);
+    }, err => {
+      console.error('Error reading partner presence:', err);
     });
   }, [partnerUid]);
 

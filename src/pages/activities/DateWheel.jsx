@@ -74,7 +74,7 @@ export default function DateWheel() {
       <Navbar />
       <PageHeader emoji="🎲" title="วงล้อเดท" subtitle="สปินเพื่อรับไอเดียเดทสุดพิเศษ!" grad="from-pink-400 to-rose-500" />
 
-      <div className="max-w-lg mx-auto px-4 -mt-6 pb-10">
+      <div className="max-w-lg mx-auto px-4 -mt-6 pb-28 md:pb-12">
         <div className="card-love p-6 text-center mb-5 shadow-xl">
           <div className="relative inline-block mb-6">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20 text-3xl drop-shadow-lg">🔻</div>

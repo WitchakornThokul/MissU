@@ -79,7 +79,7 @@ export default function LoveLetters() {
       <Navbar />
       <PageHeader icon={FiMail} title="จดหมายรัก" subtitle="เขียนความรู้สึกที่ลึกที่สุดให้กัน" from="#e8637a" to="#f472b6" />
 
-      <div className="max-w-2xl mx-auto px-4 -mt-6 pb-24">
+      <div className="max-w-2xl mx-auto px-4 -mt-6 pb-28 md:pb-12">
         {letters.length === 0 ? (
           <div className="text-center py-20">
             <FiMail size={56} color="#fda4af" style={{ margin: '0 auto 12px' }} />

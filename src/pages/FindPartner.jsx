@@ -195,7 +195,7 @@ export default function FindPartner() {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 -mt-4 pb-10 space-y-4">
+      <div className="max-w-lg mx-auto px-4 -mt-4 pb-28 md:pb-12 space-y-4">
 
         {/* Incoming requests */}
         {incomingRequests.length > 0 && (

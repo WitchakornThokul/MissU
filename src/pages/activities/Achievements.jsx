@@ -64,7 +64,7 @@ export default function Achievements() {
       <Navbar />
       <PageHeader emoji="🏆" title="ความสำเร็จ" subtitle="ปลดล็อกความสำเร็จร่วมกัน" grad="from-amber-400 to-yellow-500" />
 
-      <div className="max-w-2xl mx-auto px-4 -mt-6 pb-10">
+      <div className="max-w-2xl mx-auto px-4 -mt-6 pb-28 md:pb-12">
         <div className="card-love p-5 text-center mb-5 shadow-xl">
           <div className="font-display font-bold text-5xl text-gradient-gold mb-1">{unlocked.length}/{ACHIEVEMENTS.length}</div>
           <p className="text-gray-400 text-sm font-semibold mb-3">ปลดล็อคแล้ว</p>

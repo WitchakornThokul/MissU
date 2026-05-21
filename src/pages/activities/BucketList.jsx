@@ -82,7 +82,7 @@ export default function BucketList() {
       <Navbar />
       <PageHeader icon={FiCheckSquare} title="Bucket List คู่รัก" subtitle="สิ่งที่อยากทำด้วยกันในชีวิตนี้" from="#f97316" to="#f59e0b" />
 
-      <div className="max-w-2xl mx-auto px-4 -mt-6 pb-24">
+      <div className="max-w-2xl mx-auto px-4 -mt-6 pb-28 md:pb-12">
         {items.length > 0 && (
           <div className="card-love p-5 text-center mb-5 shadow-xl">
             <div className="flex items-center justify-center gap-4 mb-3">

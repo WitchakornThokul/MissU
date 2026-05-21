@@ -50,19 +50,30 @@ export default function DailyNote() {
   async function saveNote(e) {
     e.preventDefault();
     if (!mood || !coupleId) return;
-    const docId = `${currentUser.uid}_${today}`;
-    await setDoc(doc(db, 'couples', coupleId, 'dailyNotes', docId), {
-      date: today, mood, message,
-      author: userProfile?.displayName,
-      authorId: currentUser.uid,
-    });
+    try {
+      const docId = `${currentUser.uid}_${today}`;
+      await setDoc(doc(db, 'couples', coupleId, 'dailyNotes', docId), {
+        date: today,
+        mood,
+        message: message.trim(),
+        author: userProfile?.displayName || 'Unknown',
+        authorId: currentUser.uid,
+      });
 
-    // Update streak
-    const lastDate = userProfile?.lastStreakDate;
-    let streakCount = userProfile?.streakCount || 0;
-    if (lastDate !== today) {
-      streakCount = lastDate === yesterday ? streakCount + 1 : 1;
-      await updateUserProfile({ streakCount, lastStreakDate: today });
+      // Update streak
+      const lastDate = userProfile?.lastStreakDate;
+      let streakCount = userProfile?.streakCount || 0;
+      if (lastDate !== today) {
+        streakCount = lastDate === yesterday ? streakCount + 1 : 1;
+        await updateUserProfile({ streakCount, lastStreakDate: today });
+      }
+
+      // Clear form
+      setMood(null);
+      setMessage('');
+    } catch (err) {
+      console.error('Error saving note:', err);
+      alert('บันทึกไม่สำเร็จ: ' + err.message);
     }
   }
 
@@ -74,7 +85,7 @@ export default function DailyNote() {
       <Navbar />
       <PageHeader icon={FiEdit3} title="โน้ตรายวัน" subtitle="บอกความรู้สึกทุกวัน" from="#f59e0b" to="#ef4444" />
 
-      <div className="max-w-lg mx-auto px-4 -mt-6 pb-24">
+      <div className="max-w-lg mx-auto px-4 -mt-6 pb-28 md:pb-12">
         {/* My today note */}
         <div className="card-love p-6 mb-5 shadow-xl">
           <div className="flex items-center justify-between mb-5">

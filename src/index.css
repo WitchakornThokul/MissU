@@ -14,6 +14,13 @@ body {
 }
 #root { min-height: 100vh; }
 
+/* ── Safe spacing for bottom navigation ── */
+@media (max-width: 767px) {
+  .page-with-nav {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 20px)) !important;
+  }
+}
+
 /* ── Fonts ── */
 .font-display { font-family: 'Cormorant Garamond', serif; }
 

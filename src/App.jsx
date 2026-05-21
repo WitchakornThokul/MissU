@@ -40,13 +40,7 @@ function AuthenticatedBottomNav() {
   const location = useLocation();
   // Hide on chat page (it has its own full-screen layout)
   if (!currentUser || location.pathname === '/chat') return null;
-  return (
-    <>
-      <BottomNav/>
-      {/* Spacer so page content isn't hidden behind the fixed bottom nav on mobile */}
-      <div className="md:hidden" style={{height:72}}/>
-    </>
-  );
+  return <BottomNav/>;
 }
 
 function App() {
