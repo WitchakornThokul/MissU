@@ -30,11 +30,17 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [isLocal, setIsLocal] = useState(false);
 
+  function sanitizeName(name) {
+    return (name || '').trim().slice(0, 50);
+  }
+
   async function register(email, password, displayName) {
+    const safeName = sanitizeName(displayName);
+    if (!safeName) throw new Error('displayName is required');
     const result = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(result.user, { displayName });
+    await updateProfile(result.user, { displayName: safeName });
     const profile = {
-      uid: result.user.uid, displayName, email,
+      uid: result.user.uid, displayName: safeName, email: result.user.email,
       bio: '', avatarEmoji: '💕', photoURL: null,
       relationshipStart: new Date().toISOString().split('T')[0],
       partnerId: null, createdAt: new Date().toISOString(),
@@ -117,9 +123,14 @@ export function AuthProvider({ children }) {
     if (snap.exists()) setPartnerProfile(snap.data());
   }
 
-  async function updateUserProfile(uid, data) {
-    await setDoc(doc(db, 'users', uid), data, { merge: true });
-    setUserProfile(prev => ({ ...prev, ...data }));
+  async function updateUserProfile(data) {
+    if (!currentUser) return;
+    const safe = { ...data };
+    if (safe.displayName !== undefined) safe.displayName = sanitizeName(safe.displayName);
+    if (safe.bio !== undefined) safe.bio = (safe.bio || '').trim().slice(0, 200);
+    if (safe.avatarEmoji !== undefined) safe.avatarEmoji = (safe.avatarEmoji || '💕').slice(0, 2);
+    await setDoc(doc(db, 'users', currentUser.uid), safe, { merge: true });
+    setUserProfile(prev => ({ ...prev, ...safe }));
   }
 
   function loginLocal(name, emoji = '💕') {
@@ -147,14 +158,15 @@ export function AuthProvider({ children }) {
   // ── Partner system ──────────────────────────────────────────────
 
   async function searchUsers(nameQuery) {
-    if (!nameQuery.trim() || !currentUser) return [];
-    const q = query(
+    const q = (nameQuery || '').trim().slice(0, 50);
+    if (!q || !currentUser) return [];
+    const sq = query(
       collection(db, 'users'),
-      where('displayName', '>=', nameQuery),
-      where('displayName', '<=', nameQuery + '\uf8ff'),
+      where('displayName', '>=', q),
+      where('displayName', '<=', q + '\uf8ff'),
       limit(10)
     );
-    const snap = await getDocs(q);
+    const snap = await getDocs(sq);
     return snap.docs
       .map(d => d.data())
       .filter(u => u.uid !== currentUser.uid);
