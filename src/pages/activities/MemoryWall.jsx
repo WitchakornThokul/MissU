@@ -141,11 +141,19 @@ function MemoryDetailModal({ memory, onClose, coupleId, currentUser, userProfile
       <div className="space-y-4">
         {/* Image */}
         {memory.imageUrl && (
-          <div className="relative cursor-pointer group" onClick={() => onViewImage(memory.imageUrl)}>
+          <div className="relative">
             <img src={memory.imageUrl} alt="" className="w-full rounded-2xl" style={{ maxHeight: 320, objectFit: 'cover' }} />
-            <div className="absolute inset-0 rounded-2xl bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center">
-              <FiZoomIn size={28} color="white" className="opacity-0 group-hover:opacity-100 transition-all drop-shadow-lg" />
-            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); onViewImage(memory.imageUrl); }}
+              style={{
+                position: 'absolute', bottom: 8, right: 8,
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'rgba(0,0,0,0.5)', border: 'none',
+                color: 'white', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+              <FiZoomIn size={18} />
+            </button>
           </div>
         )}
 
@@ -349,7 +357,20 @@ export default function MemoryWall() {
                   <FiTrash2 size={11} />
                 </button>
                 {m.imageUrl && (
-                  <img src={m.imageUrl} alt="" className="w-full max-h-48 object-cover" />
+                  <div className="relative">
+                    <img src={m.imageUrl} alt="" className="w-full max-h-48 object-cover" />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setLightboxSrc(m.imageUrl); }}
+                      style={{
+                        position: 'absolute', bottom: 6, right: 6,
+                        width: 28, height: 28, borderRadius: '50%',
+                        background: 'rgba(0,0,0,0.45)', border: 'none',
+                        color: 'white', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                      <FiZoomIn size={13} />
+                    </button>
+                  </div>
                 )}
                 <div className="p-4">
                   <div className="flex items-center gap-1.5 mb-1.5">

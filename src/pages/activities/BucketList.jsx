@@ -71,10 +71,16 @@ export default function BucketList() {
     const myUid = currentUser.uid;
     const partnerUid = userProfile?.partnerId;
     const iChecked = !!checkedBy[myUid];
-    const newCheckedBy = { ...checkedBy, [myUid]: !iChecked };
+    // Use true/false explicitly; remove my key when unchecking for clean state
+    const newCheckedBy = { ...checkedBy };
+    if (iChecked) {
+      delete newCheckedBy[myUid];
+    } else {
+      newCheckedBy[myUid] = true;
+    }
     const bothDone = partnerUid
-      ? !!newCheckedBy[myUid] && !!newCheckedBy[partnerUid]
-      : !!newCheckedBy[myUid];
+      ? newCheckedBy[myUid] === true && newCheckedBy[partnerUid] === true
+      : newCheckedBy[myUid] === true;
     await updateDoc(doc(db, 'couples', coupleId, 'bucketItems', item.id), {
       checkedBy: newCheckedBy,
       done: bothDone,
