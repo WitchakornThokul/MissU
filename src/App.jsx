@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import BottomNav from './components/BottomNav';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
+import ViewProfile from './pages/ViewProfile';
 import Profile from './pages/Profile';
 import Chat from './pages/Chat';
 import FindPartner from './pages/FindPartner';
@@ -59,6 +60,7 @@ function App() {
           <Route path="/chat"         element={<ProtectedRoute><Chat /></ProtectedRoute>} />
           <Route path="/find-partner" element={<ProtectedRoute><FindPartner /></ProtectedRoute>} />
           <Route path="/activity/:id" element={<ProtectedRoute><ActivityWrapper /></ProtectedRoute>} />
+          <Route path="/profile/:uid"  element={<ProtectedRoute><ViewProfile /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
         <AuthenticatedBottomNav/>
