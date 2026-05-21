@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, onSnapshot, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, onSnapshot, updateDoc, arrayUnion, arrayRemove, addDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
-import { FiMessageCircle, FiArrowLeft, FiUserPlus, FiUserCheck, FiHeart, FiGrid } from 'react-icons/fi';
+import { FiMessageCircle, FiArrowLeft, FiUserPlus, FiUserCheck, FiHeart, FiGrid, FiSend, FiTrash2 } from 'react-icons/fi';
 
 function Avatar({ user, size = 40 }) {
   if (user?.photoURL) return (
@@ -29,46 +29,206 @@ function timeAgo(ts) {
   return `${Math.floor(d / 86400)} วันที่แล้ว`;
 }
 
-function PostMini({ post, currentUser }) {
-  const liked = post.likes?.includes(currentUser?.uid);
-  const likeCount = post.likes?.length || 0;
+function CommentSection({ postId, currentUser, userProfile }) {
+  const [comments, setComments] = useState([]);
+  const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+  const inputRef = useRef(null);
 
-  async function toggleLike() {
-    if (!currentUser) return;
-    await updateDoc(doc(db, 'posts', post.id), {
-      likes: liked ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid),
+  useEffect(() => {
+    const q = query(collection(db, 'posts', postId, 'comments'));
+    return onSnapshot(q, snap => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+      setComments(data);
     });
+  }, [postId]);
+
+  async function send(e) {
+    e.preventDefault();
+    if (!text.trim() || sending) return;
+    setSending(true);
+    await addDoc(collection(db, 'posts', postId, 'comments'), {
+      text: text.trim().slice(0, 500),
+      authorId: currentUser.uid,
+      authorName: userProfile.displayName,
+      authorEmoji: userProfile.avatarEmoji || '💕',
+      authorPhoto: userProfile.photoURL || null,
+      createdAt: serverTimestamp(),
+    });
+    setText('');
+    setSending(false);
+    inputRef.current?.focus();
   }
 
   return (
-    <div style={{
-      background: 'white',
-      borderRadius: 20,
-      overflow: 'hidden',
-      boxShadow: '0 2px 14px rgba(244,63,94,0.06)',
-    }}>
-      {/* Image */}
-      {post.imageUrl && (
-        <img src={post.imageUrl} alt="" className="w-full object-cover" style={{ maxHeight: 320 }} />
+    <div style={{ borderTop: '1px solid #f0f0f0', padding: '14px 16px 16px' }}>
+      <div className="flex items-center gap-2 mb-3">
+        <FiMessageCircle size={15} color="#9ca3af" />
+        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#6b7280' }}>
+          ความคิดเห็น ({comments.length})
+        </span>
+      </div>
+      {comments.length > 0 && (
+        <div className="space-y-2.5 mb-4">
+          {comments.map(c => (
+            <div key={c.id} className="flex gap-2">
+              {c.authorPhoto ? (
+                <img src={c.authorPhoto} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0"
+                  style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)', color: 'white' }}>
+                  {c.authorEmoji || '💕'}
+                </div>
+              )}
+              <div className="flex-1 rounded-2xl px-3 py-2" style={{ background: '#f9fafb' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#374151' }}>{c.authorName}</p>
+                <p style={{ fontSize: '0.88rem', color: '#4b5563', lineHeight: 1.45, marginTop: 2 }}>{c.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
+      <form onSubmit={send} className="flex gap-2 items-center">
+        <Avatar user={userProfile} size={32} />
+        <input
+          ref={inputRef}
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="เขียนความคิดเห็น..."
+          className="flex-1 outline-none"
+          style={{
+            background: '#f3f4f6',
+            border: '1.5px solid #e5e7eb',
+            borderRadius: 99,
+            padding: '8px 16px',
+            color: '#1f2937',
+            fontSize: '0.85rem',
+          }}
+          maxLength={500}
+        />
+        <button type="submit" disabled={!text.trim() || sending}
+          className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white transition-all active:scale-90"
+          style={{ background: text.trim() ? 'linear-gradient(135deg,#f43f5e,#a855f7)' : '#e5e7eb' }}>
+          <FiSend size={14} />
+        </button>
+      </form>
+    </div>
+  );
+}
 
+function PostCard({ post, currentUser, userProfile }) {
+  const [showComments, setShowComments] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
+  const [liking, setLiking] = useState(false);
+  const liked = post.likes?.includes(currentUser?.uid);
+  const likeCount = post.likes?.length || 0;
+  const isOwn = post.authorId === currentUser?.uid;
+
+  useEffect(() => {
+    const q = query(collection(db, 'posts', post.id, 'comments'));
+    return onSnapshot(q, snap => setCommentCount(snap.size));
+  }, [post.id]);
+
+  async function toggleLike() {
+    if (!currentUser || liking) return;
+    setLiking(true);
+    await updateDoc(doc(db, 'posts', post.id), {
+      likes: liked ? arrayRemove(currentUser.uid) : arrayUnion(currentUser.uid),
+    });
+    setLiking(false);
+  }
+
+  async function deletePost() {
+    if (!confirm('ลบโพสนี้?')) return;
+    await deleteDoc(doc(db, 'posts', post.id));
+  }
+
+  return (
+    <div className="overflow-hidden"
+      style={{
+        background: 'white',
+        borderRadius: 20,
+        boxShadow: '0 2px 20px rgba(244,63,94,0.07), 0 1px 4px rgba(0,0,0,0.04)',
+      }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+        <div className="flex-shrink-0">
+          <Avatar user={{ photoURL: post.authorPhoto, avatarEmoji: post.authorEmoji }} size={44} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-slate-800 leading-tight" style={{ fontSize: '0.93rem' }}>{post.authorName}</p>
+          <p style={{ fontSize: '0.72rem', color: '#b0a8bc', marginTop: 2 }}>{timeAgo(post.createdAt)}</p>
+        </div>
+        {isOwn && (
+          <button onClick={deletePost}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:bg-red-50 active:scale-90"
+            style={{ color: '#e0d0e8' }}>
+            <FiTrash2 size={14} />
+          </button>
+        )}
+      </div>
       {/* Text */}
       {post.text && (
-        <p className="px-4 pt-3 pb-1 text-slate-700 leading-relaxed" style={{ fontSize: '0.92rem' }}>
+        <p className="px-4 pb-3 text-slate-700 leading-relaxed" style={{ fontSize: '0.92rem' }}>
           {post.text}
         </p>
       )}
-
-      {/* Footer */}
-      <div className="flex items-center justify-between px-4 py-3">
-        <span style={{ fontSize: '0.75rem', color: '#b0a8bc' }}>{timeAgo(post.createdAt)}</span>
-        <button onClick={toggleLike}
-          className="flex items-center gap-1.5 transition-all active:scale-90"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: liked ? '#f43f5e' : '#c4b8d0' }}>
-          <FiHeart size={16} fill={liked ? '#f43f5e' : 'none'} color={liked ? '#f43f5e' : '#c4b8d0'} strokeWidth={liked ? 0 : 2} />
-          {likeCount > 0 && <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{likeCount}</span>}
+      {/* Image */}
+      {post.imageUrl && (
+        <div className="px-3 pb-3">
+          <img src={post.imageUrl} alt="" className="w-full object-cover" style={{ borderRadius: 14, maxHeight: 380 }} />
+        </div>
+      )}
+      {/* Stats row */}
+      {(likeCount > 0 || commentCount > 0) && (
+        <div className="flex items-center justify-between px-4 pb-2" style={{ gap: 8 }}>
+          {likeCount > 0 && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded-full flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)' }}>
+                <FiHeart size={10} fill="white" color="white" />
+              </div>
+              <span style={{ fontSize: '0.78rem', color: '#9ca3af', fontWeight: 600 }}>{likeCount}</span>
+            </div>
+          )}
+          {commentCount > 0 && (
+            <button onClick={() => setShowComments(p => !p)}
+              className="ml-auto"
+              style={{ fontSize: '0.78rem', color: '#b0a8bc', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>
+              {commentCount} ความคิดเห็น
+            </button>
+          )}
+        </div>
+      )}
+      {/* Divider */}
+      <div style={{ height: 1, background: '#f5f0fa', margin: '0 16px' }} />
+      {/* Action buttons */}
+      <div className="flex items-center px-2 py-1">
+        <button onClick={toggleLike} disabled={liking}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl font-semibold transition-all active:scale-95"
+          style={{ color: liked ? '#f43f5e' : '#c4b8d0', fontSize: '0.85rem' }}>
+          <FiHeart
+            size={18}
+            fill={liked ? '#f43f5e' : 'none'}
+            color={liked ? '#f43f5e' : '#c4b8d0'}
+            strokeWidth={liked ? 0 : 2}
+            style={{ transition: 'transform 0.15s', transform: liked ? 'scale(1.15)' : 'scale(1)' }}
+          />
+          ถูกใจ
+        </button>
+        <div style={{ width: 1, height: 20, background: '#f0e8f5', flexShrink: 0 }} />
+        <button onClick={() => setShowComments(p => !p)}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl font-semibold transition-all active:scale-95"
+          style={{ color: showComments ? '#a855f7' : '#c4b8d0', fontSize: '0.85rem' }}>
+          <FiMessageCircle size={18} color={showComments ? '#a855f7' : '#c4b8d0'} />
+          คอมเมนต์
         </button>
       </div>
+      {/* Comments */}
+      {showComments && (
+        <CommentSection postId={post.id} currentUser={currentUser} userProfile={userProfile} />
+      )}
     </div>
   );
 }
@@ -281,7 +441,7 @@ export default function ViewProfile() {
                 ) : (
                   <div className="space-y-4">
                     {posts.map(post => (
-                      <PostMini key={post.id} post={post} currentUser={currentUser} />
+                      <PostCard key={post.id} post={post} currentUser={currentUser} userProfile={userProfile} />
                     ))}
                   </div>
                 )}
