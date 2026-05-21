@@ -92,11 +92,6 @@ function CoupleSidebar({ userProfile, partnerProfile, isLocal, days, quote, quot
                 </div>
                 <AvatarBubble profile={partnerProfile} label="คู่รัก" ringFrom="#fff" ringTo="#e0e7ff" size={20}/>
               </div>
-              {/* Branding watermark */}
-              <p className="font-display italic absolute bottom-2 left-0 right-0 text-center"
-                style={{fontSize:'0.65rem', color:'rgba(255,255,255,0.35)', letterSpacing:'0.04em'}}>
-                Made with 💕 for you two
-              </p>
             </div>
             {/* White section */}
             <div className="bg-white px-6 py-5">
@@ -104,7 +99,7 @@ function CoupleSidebar({ userProfile, partnerProfile, isLocal, days, quote, quot
                 style={{transition:'opacity 0.4s ease', opacity: quoteFade ? 1 : 0}}>
                 "{quote}"
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mb-3">
                 <Link to={`/profile/${userProfile?.partnerId}`}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl font-bold text-sm transition-all hover:opacity-90"
                   style={{background:'#fff0f3', color:'#e8637a', border:'1.5px solid rgba(232,99,122,.2)'}}>
@@ -116,6 +111,10 @@ function CoupleSidebar({ userProfile, partnerProfile, isLocal, days, quote, quot
                   <FiMessageCircle size={15}/> แชท
                 </Link>
               </div>
+              <p className="font-display italic text-center"
+                style={{fontSize:'0.62rem', color:'#e8c5cc', letterSpacing:'0.04em'}}>
+                Made with 💕 for you two
+              </p>
             </div>
           </>
         ) : !isLocal ? (
@@ -254,7 +253,7 @@ export default function Dashboard() {
               <div className="rounded-3xl mb-5 overflow-hidden"
                 style={{boxShadow:'0 8px 32px rgba(232,99,122,0.18)'}}>
                 {/* Gradient top section */}
-                <div className="relative px-5 pt-6 pb-10 text-center"
+                <div className="relative px-5 pt-6 pb-6 text-center"
                   style={{background:'linear-gradient(135deg,#f43f5e,#c026d3,#7c3aed)'}}>
                   {/* Decorative circles */}
                   <div style={{position:'absolute',top:-20,right:-20,width:100,height:100,borderRadius:'50%',background:'rgba(255,255,255,0.07)'}}/>
@@ -283,11 +282,6 @@ export default function Dashboard() {
                       <AvatarBubble profile={partnerProfile} label="คู่รัก" ringFrom="#fff" ringTo="#e0e7ff" size={15}/>
                     </Link>
                   </div>
-                  {/* Branding watermark */}
-                  <p className="font-display italic absolute bottom-2 left-0 right-0 text-center"
-                    style={{fontSize:'0.65rem', color:'rgba(255,255,255,0.35)', letterSpacing:'0.04em'}}>
-                    Made with 💕 for you two
-                  </p>
                 </div>
                 {/* White bottom section */}
                 <div className="bg-white px-5 py-4">
@@ -295,7 +289,7 @@ export default function Dashboard() {
                     style={{transition:'opacity 0.4s ease', opacity: quoteFade ? 1 : 0}}>
                     "{QUOTES[quoteIdx]}"
                   </p>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mb-3">
                     <Link to={`/profile/${userProfile?.partnerId}`}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-2xl font-bold text-sm"
                       style={{background:'#fff0f3', color:'#e8637a'}}>
@@ -307,6 +301,10 @@ export default function Dashboard() {
                       <FiMessageCircle size={15}/> แชท
                     </Link>
                   </div>
+                  <p className="font-display italic text-center"
+                    style={{fontSize:'0.62rem', color:'#e8c5cc', letterSpacing:'0.04em'}}>
+                    Made with 💕 for you two
+                  </p>
                 </div>
               </div>
             ) : !isLocal ? (
