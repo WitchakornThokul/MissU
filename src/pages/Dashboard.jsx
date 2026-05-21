@@ -1,16 +1,20 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
+import {
+  FiMail, FiClock, FiCheckSquare, FiCamera,
+  FiHelpCircle, FiRefreshCw, FiEdit3, FiAward,
+} from 'react-icons/fi';
 
 const ACTIVITIES = [
-  { id:'love-letters', emoji:'💌', title:'จดหมายรัก',       desc:'เขียนความรู้สึกให้กัน',    from:'#e8637a', to:'#f472b6' },
-  { id:'countdown',    emoji:'⏰', title:'นับวัน',           desc:'นับวันพิเศษของเรา',          from:'#8b5cf6', to:'#a78bfa' },
-  { id:'bucket-list',  emoji:'🎯', title:'Bucket List',      desc:'สิ่งที่อยากทำด้วยกัน',      from:'#f97316', to:'#fbbf24' },
-  { id:'memory-wall',  emoji:'📸', title:'ความทรงจำ',        desc:'เก็บทุกช่วงเวลาดีๆ',         from:'#14b8a6', to:'#1da0bc' },
-  { id:'love-quiz',    emoji:'❓', title:'รู้จักกันดีแค่ไหน',desc:'ทดสอบความเข้าใจกัน',       from:'#6366f1', to:'#818cf8' },
-  { id:'date-wheel',   emoji:'🎲', title:'วงล้อเดท',         desc:'สปินหาไอเดียเดท',           from:'#ec4899', to:'#e8637a' },
-  { id:'daily-note',   emoji:'💝', title:'โน้ตรายวัน',       desc:'บอกความรู้สึกทุกวัน',        from:'#f59e0b', to:'#ef4444' },
-  { id:'achievements', emoji:'🏆', title:'ความสำเร็จ',       desc:'ปลดล็อกความทรงจำ',           from:'#eab308', to:'#f97316' },
+  { id:'love-letters', Icon:FiMail,        title:'จดหมายรัก',        desc:'เขียนความรู้สึกให้กัน',   from:'#e8637a', to:'#f472b6' },
+  { id:'countdown',    Icon:FiClock,       title:'นับวัน',            desc:'นับวันพิเศษของเรา',         from:'#8b5cf6', to:'#a78bfa' },
+  { id:'bucket-list',  Icon:FiCheckSquare, title:'Bucket List',       desc:'สิ่งที่อยากทำด้วยกัน',     from:'#f97316', to:'#fbbf24' },
+  { id:'memory-wall',  Icon:FiCamera,      title:'ความทรงจำ',         desc:'เก็บทุกช่วงเวลาดีๆ',        from:'#14b8a6', to:'#1da0bc' },
+  { id:'love-quiz',    Icon:FiHelpCircle,  title:'รู้จักกันดีแค่ไหน', desc:'ทดสอบความเข้าใจกัน',      from:'#6366f1', to:'#818cf8' },
+  { id:'date-wheel',   Icon:FiRefreshCw,   title:'วงล้อเดท',          desc:'สปินหาไอเดียเดท',          from:'#ec4899', to:'#e8637a' },
+  { id:'daily-note',   Icon:FiEdit3,       title:'โน้ตรายวัน',        desc:'บอกความรู้สึกทุกวัน',       from:'#f59e0b', to:'#ef4444' },
+  { id:'achievements', Icon:FiAward,       title:'ความสำเร็จ',        desc:'ปลดล็อกความทรงจำ',          from:'#eab308', to:'#f97316' },
 ];
 
 const QUOTES = [
@@ -29,39 +33,44 @@ const LockIcon = () => (
 );
 
 function ActivityCard({ a, hasPartner }) {
+  const { Icon } = a;
   const content = (
     <div className="card card-hover group overflow-hidden h-full flex flex-col">
-      {/* Big colored icon area */}
-      <div className="relative flex items-center justify-center py-7 overflow-hidden"
-        style={{background:`linear-gradient(135deg,${a.from}18,${a.to}30)`}}>
-        {/* Soft bg blob */}
-        <div className="absolute inset-0 opacity-20"
-          style={{background:`radial-gradient(circle at 50% 60%,${a.to},transparent 70%)`}}/>
-        <span className="text-5xl relative z-10 transition-transform duration-300 group-hover:scale-110">
-          {a.emoji}
-        </span>
+      {/* Icon area with gradient bg */}
+      <div className="relative flex items-center justify-center py-8 overflow-hidden"
+        style={{background:`linear-gradient(135deg,${a.from}15,${a.to}28)`}}>
+        <div className="absolute inset-0 opacity-15"
+          style={{background:`radial-gradient(circle at 50% 70%,${a.to},transparent 65%)`}}/>
+
+        {/* Icon circle */}
+        <div className="relative z-10 w-16 h-16 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+          style={{
+            background:`linear-gradient(135deg,${a.from},${a.to})`,
+            boxShadow:`0 8px 24px ${a.from}45`,
+          }}>
+          <Icon size={28} strokeWidth={1.8} color="white"/>
+        </div>
+
         {!hasPartner && (
-          <div className="absolute inset-0 flex items-center justify-center"
-            style={{background:'rgba(255,255,255,.6)'}}>
+          <div className="absolute inset-0 flex items-center justify-center rounded-t-[20px]"
+            style={{background:'rgba(255,255,255,.75)', backdropFilter:'blur(2px)'}}>
             <div className="flex flex-col items-center gap-1">
               <LockIcon/>
-              <span className="text-xs font-bold text-slate-500">ล็อก</span>
+              <span className="text-xs font-bold text-slate-400">ต้องการคู่รัก</span>
             </div>
           </div>
         )}
       </div>
 
-      {/* Color bar */}
+      {/* Color accent bar */}
       <div className="h-[3px]" style={{background:`linear-gradient(90deg,${a.from},${a.to})`}}/>
 
       {/* Text */}
       <div className="p-4 flex-1 flex flex-col justify-center">
-        <h3 className="font-bold text-slate-800 leading-snug mb-1"
-          style={{fontSize:'1rem'}}>
+        <h3 className="font-bold text-slate-800 leading-snug mb-1" style={{fontSize:'0.95rem'}}>
           {a.title}
         </h3>
-        <p className="text-slate-500 leading-snug"
-          style={{fontSize:'0.82rem'}}>
+        <p className="text-slate-400 leading-snug" style={{fontSize:'0.8rem'}}>
           {a.desc}
         </p>
       </div>
