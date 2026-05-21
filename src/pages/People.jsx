@@ -4,7 +4,7 @@ import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/f
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
-import { FiSearch, FiUserPlus, FiUserCheck, FiUsers, FiCheck, FiX, FiChevronRight } from 'react-icons/fi';
+import { FiSearch, FiUserPlus, FiUserCheck, FiUsers, FiCheck, FiX, FiMessageCircle } from 'react-icons/fi';
 
 function Avatar({ user, size = 40 }) {
   if (user?.photoURL) return (
@@ -320,10 +320,10 @@ export default function People() {
                         )}
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <Link to={`/profile/${friend.uid}`}
+                        <Link to={`/messages/${friend.uid}`}
                           className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
-                          style={{ background: '#f8f4fb', color: '#a855f7' }}>
-                          <FiChevronRight size={16} />
+                          style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)', color: 'white' }}>
+                          <FiMessageCircle size={15} />
                         </Link>
                         <button onClick={() => handleRemoveFriend(friend.uid)}
                           className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors hover:bg-red-50"

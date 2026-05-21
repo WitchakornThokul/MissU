@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 
@@ -12,7 +13,7 @@ const CameraIcon = () => (
 );
 
 export default function Profile() {
-  const { currentUser, userProfile, updateUserProfile, updateLocalProfile, uploadProfilePhoto, uploadLocalPhoto, isLocal } = useAuth();
+  const { currentUser, userProfile, partnerProfile, updateUserProfile, updateLocalProfile, uploadProfilePhoto, uploadLocalPhoto, isLocal } = useAuth();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [saved, setSaved] = useState(false);
@@ -93,23 +94,36 @@ export default function Profile() {
             <p className="text-sm text-slate-400 mb-3">{userProfile?.email||'Local Account'}</p>
             {userProfile?.bio && <p className="font-display italic text-slate-500 text-base mb-4">"{userProfile.bio}"</p>}
 
-            {/* Stats row */}
-            {days !== null && days >= 0 && (
-              <div className="flex justify-center gap-3 mb-5">
-                <div className="text-center px-6 py-3.5 rounded-2xl flex-1"
-                  style={{background:'linear-gradient(135deg,#fff1f3,#ffe4e9)',border:'1px solid rgba(244,63,94,0.12)',boxShadow:'0 2px 12px rgba(244,63,94,0.08)'}}>
-                  <p className="font-display font-bold text-4xl text-gradient leading-none">{days}</p>
-                  <p className="text-xs text-rose-400 font-bold uppercase tracking-wider mt-1">วันด้วยกัน</p>
-                </div>
-                {userProfile?.relationshipStart && (
-                  <div className="text-center px-6 py-3.5 rounded-2xl flex-1"
-                    style={{background:'linear-gradient(135deg,#f3e8ff,#ede9fe)',border:'1px solid rgba(168,85,247,0.12)',boxShadow:'0 2px 12px rgba(168,85,247,0.08)'}}>
-                    <p className="font-bold text-purple-500 text-base mt-1">
-                      {new Date(userProfile.relationshipStart).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}
-                    </p>
-                    <p className="text-xs text-purple-400 font-bold uppercase tracking-wider mt-0.5">วันแรก</p>
+            {/* Stats row — only show if has partner */}
+            {userProfile?.partnerId && days !== null && days >= 0 && (
+              <div className="mb-5">
+                {/* Partner name */}
+                {partnerProfile && (
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <span className="text-rose-300">💕</span>
+                    <Link to={`/profile/${userProfile.partnerId}`}
+                      className="font-bold text-rose-400 hover:text-rose-500 transition-colors"
+                      style={{ fontSize: '0.9rem' }}>
+                      {partnerProfile.displayName}
+                    </Link>
                   </div>
                 )}
+                <div className="flex justify-center gap-3">
+                  <div className="text-center px-6 py-3.5 rounded-2xl flex-1"
+                    style={{background:'linear-gradient(135deg,#fff1f3,#ffe4e9)',border:'1px solid rgba(244,63,94,0.12)',boxShadow:'0 2px 12px rgba(244,63,94,0.08)'}}>
+                    <p className="font-display font-bold text-4xl text-gradient leading-none">{days}</p>
+                    <p className="text-xs text-rose-400 font-bold uppercase tracking-wider mt-1">วันด้วยกัน</p>
+                  </div>
+                  {userProfile?.relationshipStart && (
+                    <div className="text-center px-6 py-3.5 rounded-2xl flex-1"
+                      style={{background:'linear-gradient(135deg,#f3e8ff,#ede9fe)',border:'1px solid rgba(168,85,247,0.12)',boxShadow:'0 2px 12px rgba(168,85,247,0.08)'}}>
+                      <p className="font-bold text-purple-500 text-base mt-1">
+                        {new Date(userProfile.relationshipStart).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'})}
+                      </p>
+                      <p className="text-xs text-purple-400 font-bold uppercase tracking-wider mt-0.5">วันแรก</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

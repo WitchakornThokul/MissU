@@ -36,8 +36,12 @@ export default function DailyNote() {
   const { currentUser, userProfile, partnerProfile, updateUserProfile } = useAuth();
   const coupleId = currentUser && userProfile?.partnerId
     ? [currentUser.uid, userProfile.partnerId].sort().join('_') : null;
-  const today = new Date().toISOString().split('T')[0];
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+  function localDateStr(d = new Date()) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  const today = localDateStr();
+  const yesterday = localDateStr(new Date(Date.now() - 86400000));
 
   const [notes, setNotes] = useState([]);
   const [selectedKey, setSelectedKey] = useState(null);

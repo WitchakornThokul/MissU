@@ -10,6 +10,7 @@ import Chat from './pages/Chat';
 import FindPartner from './pages/FindPartner';
 import People from './pages/People';
 import Feed from './pages/Feed';
+import FriendChat from './pages/FriendChat';
 import LoveLetters from './pages/activities/LoveLetters';
 import Countdown from './pages/activities/Countdown';
 import BucketList from './pages/activities/BucketList';
@@ -40,7 +41,7 @@ function ActivityWrapper() {
 function AuthenticatedBottomNav() {
   const { currentUser } = useAuth();
   const location = useLocation();
-  const hide = !currentUser || location.pathname === '/' || location.pathname === '/chat';
+  const hide = !currentUser || location.pathname === '/' || location.pathname === '/chat' || location.pathname.startsWith('/messages/');
   if (hide) return null;
   return <BottomNav/>;
 }
@@ -59,6 +60,7 @@ function App() {
           <Route path="/profile/:uid"  element={<ProtectedRoute><ViewProfile /></ProtectedRoute>} />
           <Route path="/people"       element={<ProtectedRoute><People /></ProtectedRoute>} />
           <Route path="/feed"         element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+          <Route path="/messages/:uid" element={<ProtectedRoute><FriendChat /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
         <AuthenticatedBottomNav/>
