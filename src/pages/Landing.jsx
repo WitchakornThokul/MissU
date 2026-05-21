@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { MissULogo } from '../components/MissULogo';
 
-const EMOJIS = ['💕','🌹','🦋','🌸','💖','🍓','🌺','🐱','🐰','🌙'];
-
 const FLOATS = [
   { emoji:'💕', s:'text-3xl', top:'8%',  left:'5%',   cls:'animate-float-a delay-0' },
   { emoji:'🌸', s:'text-2xl', top:'12%', left:'88%',  cls:'animate-float-b delay-500' },
@@ -35,11 +33,10 @@ export default function Landing() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [emoji, setEmoji] = useState('💕');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { login, register, loginWithGoogle, loginLocal } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const go = () => navigate('/dashboard');
@@ -55,8 +52,7 @@ export default function Landing() {
     e.preventDefault(); setError(''); setLoading(true);
     try {
       if (mode === 'login') await login(email, password);
-      else if (mode === 'register') await register(email, password, name);
-      else { loginLocal(name.trim(), emoji); setLoading(false); go(); return; }
+      else await register(email, password, name);
       go();
     } catch(err) {
       const msg = err?.message || '';
@@ -98,7 +94,7 @@ export default function Landing() {
             </div>
 
             {/* Auth options */}
-            <div className="w-full space-y-3">
+            <div className="w-full space-y-5">
               {/* Google */}
               <button onClick={handleGoogle} disabled={googleLoading}
                 className="w-full flex items-center justify-center gap-3 font-semibold text-sm transition-all"
@@ -129,7 +125,7 @@ export default function Landing() {
                   borderRadius:14, padding:'0.9rem 1.6rem', border:'none', cursor:'pointer',
                   boxShadow:'0 4px 20px rgba(232,99,122,.4)',
                 }}>
-                เข้าสู่ระบบด้วยอีเมล
+                เข้าสู่ระบบ
               </button>
 
               {/* Register */}
@@ -144,17 +140,6 @@ export default function Landing() {
                 สมัครสมาชิกใหม่
               </button>
 
-              {/* Local */}
-              <button onClick={() => setMode('local')}
-                className="w-full font-semibold text-sm flex items-center justify-center"
-                style={{
-                  background:'transparent',
-                  border:'1.5px solid rgba(29,160,188,.4)',
-                  color:'rgba(79,195,217,.85)',
-                  borderRadius:14, padding:'0.75rem 1.6rem', cursor:'pointer',
-                }}>
-                ใช้งานแบบออฟไลน์ (Local)
-              </button>
             </div>
 
             <p className="text-center mt-8 text-xs" style={{color:'rgba(255,255,255,.18)'}}>
@@ -188,26 +173,21 @@ export default function Landing() {
             <div className="text-center mb-6">
               <div className="w-14 h-14 rounded-2xl mx-auto mb-3 flex items-center justify-center text-3xl"
                 style={{
-                  background: mode === 'local'
-                    ? 'rgba(29,160,188,.12)'
-                    : mode === 'login'
-                    ? 'rgba(232,99,122,.12)'
-                    : 'rgba(29,160,188,.12)',
+                  background: mode === 'login' ? 'rgba(232,99,122,.12)' : 'rgba(29,160,188,.12)',
                   border: '1px solid rgba(255,255,255,.08)',
                 }}>
-                {mode === 'login' ? '🔑' : mode === 'register' ? '✨' : '📱'}
+                {mode === 'login' ? '🔑' : '✨'}
               </div>
               <h2 style={{fontFamily:"'Nunito',sans-serif",fontWeight:800,fontSize:'1.4rem',color:'white',letterSpacing:'-0.3px'}}>
-                {mode === 'login' ? 'ยินดีต้อนรับกลับ' : mode === 'register' ? 'เริ่มต้นใหม่' : 'ใช้งานแบบ Local'}
+                {mode === 'login' ? 'ยินดีต้อนรับกลับ' : 'เริ่มต้นใหม่'}
               </h2>
               <p style={{color:'rgba(255,255,255,.35)',fontSize:'.82rem',marginTop:4}}>
-                {mode === 'login' ? 'เข้าสู่ระบบเพื่อใช้งาน' : mode === 'register' ? 'สร้างบัญชีใหม่' : 'ไม่ต้องสมัครสมาชิก'}
+                {mode === 'login' ? 'เข้าสู่ระบบเพื่อใช้งาน' : 'สร้างบัญชีใหม่'}
               </p>
             </div>
 
-            {/* Google (login/register only) */}
-            {mode !== 'local' && (
-              <>
+            {/* Google */}
+            <>
                 <button onClick={handleGoogle} disabled={googleLoading}
                   className="w-full flex items-center justify-center gap-2.5 font-semibold text-sm mb-5 transition-all"
                   style={{
@@ -225,8 +205,7 @@ export default function Landing() {
                   <span style={{color:'rgba(255,255,255,.25)',fontSize:'.73rem',fontWeight:600}}>หรือใช้อีเมล</span>
                   <div className="flex-1 h-px" style={{background:'rgba(255,255,255,.08)'}}/>
                 </div>
-              </>
-            )}
+            </>
 
             {/* Error */}
             {error && (
@@ -238,64 +217,47 @@ export default function Landing() {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-3">
-              {(mode === 'register' || mode === 'local') && (
+              {mode === 'register' && (
                 <div>
                   <label className="input-label" style={{color:'rgba(255,255,255,.35)'}}>ชื่อเล่น</label>
                   <input value={name} onChange={e => setName(e.target.value)}
-                    placeholder="ชื่อของคุณ" required
+                    placeholder="ชื่อของคุณ" required autoComplete="nickname"
                     className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
                     style={{
                       fontFamily:"'Nunito',sans-serif",
-                      background:'rgba(255,255,255,.07)',
-                      border:'1.5px solid rgba(255,255,255,.10)',
+                      background:'rgba(255,255,255,.10)',
+                      border:'1.5px solid rgba(255,255,255,.18)',
                       color:'white',
+                      colorScheme:'dark',
                     }}/>
                 </div>
               )}
-              {mode === 'local' && (
-                <div>
-                  <label className="input-label" style={{color:'rgba(255,255,255,.35)'}}>เลือก Emoji</label>
-                  <div className="flex flex-wrap gap-2">
-                    {EMOJIS.map(e => (
-                      <button key={e} type="button" onClick={() => setEmoji(e)}
-                        className="text-xl p-2 rounded-xl transition-all"
-                        style={emoji === e
-                          ? {background:'rgba(255,255,255,.18)',transform:'scale(1.2)'}
-                          : {background:'rgba(255,255,255,.05)',opacity:.5}}>
-                        {e}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {mode !== 'local' && (
-                <>
-                  <div>
-                    <label className="input-label" style={{color:'rgba(255,255,255,.35)'}}>อีเมล</label>
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                      placeholder="you@example.com" required
-                      className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
-                      style={{
-                        fontFamily:"'Nunito',sans-serif",
-                        background:'rgba(255,255,255,.07)',
-                        border:'1.5px solid rgba(255,255,255,.10)',
-                        color:'white',
-                      }}/>
-                  </div>
-                  <div>
-                    <label className="input-label" style={{color:'rgba(255,255,255,.35)'}}>รหัสผ่าน</label>
-                    <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                      placeholder="••••••••" required minLength={6}
-                      className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
-                      style={{
-                        fontFamily:"'Nunito',sans-serif",
-                        background:'rgba(255,255,255,.07)',
-                        border:'1.5px solid rgba(255,255,255,.10)',
-                        color:'white',
-                      }}/>
-                  </div>
-                </>
-              )}
+              <div>
+                <label className="input-label" style={{color:'rgba(255,255,255,.35)'}}>อีเมล</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="you@example.com" required autoComplete="email"
+                  className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
+                  style={{
+                    fontFamily:"'Nunito',sans-serif",
+                    background:'rgba(255,255,255,.10)',
+                    border:'1.5px solid rgba(255,255,255,.18)',
+                    color:'white',
+                    colorScheme:'dark',
+                  }}/>
+              </div>
+              <div>
+                <label className="input-label" style={{color:'rgba(255,255,255,.35)'}}>รหัสผ่าน</label>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••" required minLength={6} autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  className="w-full rounded-2xl px-4 py-3 text-sm outline-none"
+                  style={{
+                    fontFamily:"'Nunito',sans-serif",
+                    background:'rgba(255,255,255,.10)',
+                    border:'1.5px solid rgba(255,255,255,.18)',
+                    color:'white',
+                    colorScheme:'dark',
+                  }}/>
+              </div>
               <div className="pt-1">
                 <button type="submit" disabled={loading}
                   className="w-full py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2"
