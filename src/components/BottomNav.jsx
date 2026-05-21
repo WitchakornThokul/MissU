@@ -26,7 +26,7 @@ export default function BottomNav() {
         borderTop: '1px solid #f0f0f0',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}>
-      <div className="flex items-center justify-around px-1 py-1">
+      <div className="flex items-center justify-around px-2 py-2">
         {TABS.map(({ to, label, Icon, badge, locked }) => {
           const isActive = active === to;
           const color = isActive ? '#e8637a' : locked ? '#d1d5db' : '#9ca3af';
@@ -34,10 +34,17 @@ export default function BottomNav() {
             <Link
               key={label}
               to={locked ? '/find-partner' : to}
-              className="flex flex-col items-center gap-0.5 flex-1 py-2.5 px-1 transition-all active:scale-90">
+              className="flex flex-col items-center gap-1 flex-1 py-2 px-1 transition-all active:scale-90">
               <div className="relative">
+                {isActive && (
+                  <div style={{
+                    position: 'absolute', inset: -8,
+                    borderRadius: 16,
+                    background: 'linear-gradient(135deg,rgba(232,99,122,0.12),rgba(29,160,188,0.08))',
+                  }}/>
+                )}
                 <Icon
-                  size={22}
+                  size={26}
                   strokeWidth={isActive ? 2.5 : 1.8}
                   color={color}
                 />
@@ -51,7 +58,7 @@ export default function BottomNav() {
               </div>
               <span
                 className="font-semibold leading-none"
-                style={{fontSize:'0.65rem', color}}>
+                style={{fontSize:'0.72rem', color}}>
                 {label}
               </span>
             </Link>
