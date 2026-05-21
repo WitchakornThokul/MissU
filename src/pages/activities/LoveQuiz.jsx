@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import Navbar from '../../components/Navbar';
 import PageHeader from '../../components/PageHeader';
+import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
 const QUESTIONS = [
   { q:'ของกินที่ฉันชอบที่สุดคืออะไร?',         choices:['ข้าวผัด','พิซซ่า','ซูชิ','ส้มตำ'] },
@@ -14,37 +17,56 @@ const QUESTIONS = [
 ];
 
 export default function LoveQuiz() {
+  const { currentUser, userProfile } = useAuth();
+  const coupleId = currentUser && userProfile?.partnerId
+    ? [currentUser.uid, userProfile.partnerId].sort().join('_') : null;
+
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [selected, setSelected] = useState(null);
   const [mode, setMode] = useState('menu');
   const [partnerAnswers, setPartnerAnswers] = useState(null);
   const [score, setScore] = useState(null);
+  const [myAnswersSaved, setMyAnswersSaved] = useState(false);
 
-  function startAnswer(){ setMode('answer'); setCurrent(0); setAnswers([]); setSelected(null); }
-  function startQuiz(){
-    const saved=localStorage.getItem('missu_quiz_answers');
-    if(!saved){ alert('ยังไม่มีคำตอบที่บันทึกไว้! ให้อีกฝ่ายตอบก่อนนะ'); return; }
-    setPartnerAnswers(JSON.parse(saved));
+  useEffect(() => {
+    if (!coupleId || !userProfile?.partnerId) return;
+    // Listen for partner's answers
+    const unsub = onSnapshot(doc(db, 'couples', coupleId, 'quiz', userProfile.partnerId), snap => {
+      if (snap.exists()) setPartnerAnswers(snap.data().answers);
+      else setPartnerAnswers(null);
+    });
+    // Check if I already answered
+    getDoc(doc(db, 'couples', coupleId, 'quiz', currentUser.uid)).then(snap => {
+      setMyAnswersSaved(snap.exists());
+    });
+    return unsub;
+  }, [coupleId]);
+
+  function startAnswer() { setMode('answer'); setCurrent(0); setAnswers([]); setSelected(null); }
+
+  function startQuiz() {
+    if (!partnerAnswers) { alert('ยังไม่มีคำตอบจากคู่รัก รอให้คู่รักตอบก่อนนะ'); return; }
     setMode('quiz'); setCurrent(0); setAnswers([]); setSelected(null);
   }
 
-  function handleNext(){
-    if(selected===null)return;
-    const newAns=[...answers,selected];
-    if(mode==='answer' && current===QUESTIONS.length-1){
-      localStorage.setItem('missu_quiz_answers',JSON.stringify(newAns));
+  async function handleNext() {
+    if (selected === null) return;
+    const newAns = [...answers, selected];
+    if (mode === 'answer' && current === QUESTIONS.length - 1) {
+      await setDoc(doc(db, 'couples', coupleId, 'quiz', currentUser.uid), { answers: newAns });
+      setMyAnswersSaved(true);
       setMode('done_answer');
-    } else if(mode==='quiz' && current===QUESTIONS.length-1){
-      setScore(newAns.filter((a,i)=>a===partnerAnswers[i]).length);
+    } else if (mode === 'quiz' && current === QUESTIONS.length - 1) {
+      setScore(newAns.filter((a, i) => a === partnerAnswers[i]).length);
       setMode('done_quiz');
     } else {
-      setAnswers(newAns); setCurrent(c=>c+1); setSelected(null);
+      setAnswers(newAns); setCurrent(c => c + 1); setSelected(null);
     }
   }
 
   const q = QUESTIONS[current];
-  const progress = ((current)/ QUESTIONS.length) * 100;
+  const progress = (current / QUESTIONS.length) * 100;
 
   return (
     <div className="min-h-screen" style={{background:'linear-gradient(160deg,#eff6ff,#e0e7ff,#f3e8ff)'}}>
@@ -69,8 +91,11 @@ export default function LoveQuiz() {
                 style={{borderColor:'rgba(99,102,241,0.4)',color:'#6366f1'}}>
                 ฉันจะทายคำตอบของแฟน
               </button>
-              {localStorage.getItem('missu_quiz_answers') && (
-                <p className="text-xs text-green-500 font-medium">✓ มีคำตอบที่บันทึกไว้ พร้อมทายได้เลย!</p>
+              {myAnswersSaved && (
+                <p className="text-xs text-green-500 font-medium">✓ คู่รักสามารถทายคำตอบคุณได้แล้ว!</p>
+              )}
+              {partnerAnswers && (
+                <p className="text-xs text-indigo-500 font-medium">✓ คู่รักตอบคำถามแล้ว พร้อมทายได้เลย!</p>
               )}
             </div>
           </div>
