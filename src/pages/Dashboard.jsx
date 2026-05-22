@@ -63,7 +63,7 @@ function AvatarBubble({ profile, label, ringFrom, ringTo, size = 16 }) {
 /* ── Desktop couple sidebar ── */
 function CoupleSidebar({ userProfile, partnerProfile, isLocal, days, quote, quoteFade }) {
   return (
-    <div className="hidden md:flex flex-col gap-4 w-72 flex-shrink-0">
+    <div className="hidden lg:flex flex-col gap-4 w-80 flex-shrink-0">
       <div className="rounded-3xl overflow-hidden text-center"
         style={{boxShadow:'0 8px 32px rgba(232,99,122,0.18)', position:'sticky', top:80}}>
         {(partnerProfile || isLocal) ? (
@@ -230,19 +230,9 @@ export default function Dashboard() {
       </div>
 
       {/* ── Main layout ── */}
-      <div className="max-w-6xl mx-auto px-4 pt-5 pb-20 md:pb-12 md:flex md:gap-8 lg:pt-8">
+      <div className="max-w-[1100px] mx-auto px-4 pt-5 pb-20 md:pb-12 lg:pt-8 lg:flex lg:gap-8 lg:items-start">
 
-        {/* Desktop sidebar */}
-        <CoupleSidebar
-          userProfile={userProfile}
-          partnerProfile={partnerProfile}
-          isLocal={isLocal}
-          days={days}
-          quote={QUOTES[quoteIdx]}
-          quoteFade={quoteFade}
-        />
-
-        {/* Main content */}
+        {/* Main content — left */}
         <div className="flex-1 min-w-0">
 
           {/* ── Mobile: couple header ── */}
@@ -367,6 +357,17 @@ export default function Dashboard() {
           )}
 
         </div>
+
+        {/* Desktop right panel — couple info */}
+        <CoupleSidebar
+          userProfile={userProfile}
+          partnerProfile={partnerProfile}
+          isLocal={isLocal}
+          days={days}
+          quote={QUOTES[quoteIdx]}
+          quoteFade={quoteFade}
+        />
+
       </div>
     </div>
   );

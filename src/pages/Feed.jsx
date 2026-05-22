@@ -399,28 +399,79 @@ export default function Feed() {
         <FiEdit3 size={22} color="#111" strokeWidth={1.8} />
       </div>
 
-      <div style={{ maxWidth: 630, margin: '0 auto' }}>
+      {/* IG-style 2-column layout on desktop */}
+      <div className="max-w-[975px] mx-auto lg:flex lg:gap-8 lg:px-6 lg:pt-6 lg:items-start">
 
-        {/* Create Post */}
-        {userProfile && (
-          <CreatePostBox currentUser={currentUser} userProfile={userProfile} />
-        )}
+        {/* Feed column */}
+        <div style={{ maxWidth: 630, width: '100%' }}>
 
-        {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 60 }}>
-            <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid #dbdbdb', borderTopColor: '#111', animation: 'spin 0.8s linear infinite' }} />
+          {/* Create Post */}
+          {userProfile && (
+            <CreatePostBox currentUser={currentUser} userProfile={userProfile} />
+          )}
+
+          {loading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 60 }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid #dbdbdb', borderTopColor: '#111', animation: 'spin 0.8s linear infinite' }} />
+            </div>
+          ) : posts.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 24px', background: '#fff', borderBottom: '1px solid #efefef' }}>
+              <div style={{ fontSize: '3rem', marginBottom: 12 }}>✨</div>
+              <p style={{ fontWeight: 700, color: '#111', fontSize: '1rem', marginBottom: 6 }}>ยังไม่มีโพส</p>
+              <p style={{ color: '#8e8e8e', fontSize: '0.88rem' }}>เพิ่มเพื่อนแล้วโพสอะไรสักอย่าง</p>
+            </div>
+          ) : (
+            posts.map(post => (
+              <PostCard key={post.id} post={post} currentUser={currentUser} userProfile={userProfile} />
+            ))
+          )}
+
+        </div>
+
+        {/* Right panel — desktop only */}
+        <div className="hidden lg:block flex-shrink-0" style={{ width: 293 }}>
+          <div style={{ position: 'sticky', top: 24 }}>
+
+            {/* Profile mini card */}
+            {userProfile && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24, padding: '0 4px' }}>
+                <Avatar user={userProfile} size={56} ring />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: 700, color: '#111', fontSize: '0.92rem' }}>{userProfile.displayName}</p>
+                  {userProfile.bio && <p style={{ color: '#8e8e8e', fontSize: '0.82rem', marginTop: 2 }}>{userProfile.bio}</p>}
+                </div>
+              </div>
+            )}
+
+            {/* Divider */}
+            <div style={{ height: 1, background: '#efefef', marginBottom: 16 }} />
+
+            <p style={{ fontSize: '0.82rem', fontWeight: 700, color: '#8e8e8e', marginBottom: 14, letterSpacing: '0.02em' }}>
+              กิจกรรมของเรา
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                { to: '/activity/love-letters', label: 'จดหมายรัก', emoji: '💌' },
+                { to: '/activity/countdown',    label: 'นับวัน',    emoji: '🗓' },
+                { to: '/activity/bucket-list',  label: 'Bucket List', emoji: '✅' },
+                { to: '/activity/memory-wall',  label: 'ความทรงจำ', emoji: '📸' },
+                { to: '/activity/daily-note',   label: 'โน้ตรายวัน', emoji: '📝' },
+              ].map(item => (
+                <a key={item.to} href={item.to}
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#111', textDecoration: 'none', fontSize: '0.88rem', fontWeight: 600, padding: '6px 4px', borderRadius: 8, transition: 'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#fafafa'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <span style={{ fontSize: '1.1rem' }}>{item.emoji}</span>
+                  {item.label}
+                </a>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 24, fontSize: '0.72rem', color: '#c7c7c7', lineHeight: 1.8 }}>
+              Made with 💕 for you two
+            </div>
           </div>
-        ) : posts.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 24px', background: '#fff', borderBottom: '1px solid #efefef' }}>
-            <div style={{ fontSize: '3rem', marginBottom: 12 }}>✨</div>
-            <p style={{ fontWeight: 700, color: '#111', fontSize: '1rem', marginBottom: 6 }}>ยังไม่มีโพส</p>
-            <p style={{ color: '#8e8e8e', fontSize: '0.88rem' }}>เพิ่มเพื่อนแล้วโพสอะไรสักอย่าง</p>
-          </div>
-        ) : (
-          posts.map(post => (
-            <PostCard key={post.id} post={post} currentUser={currentUser} userProfile={userProfile} />
-          ))
-        )}
+        </div>
 
       </div>
     </div>

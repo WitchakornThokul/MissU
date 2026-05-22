@@ -4,7 +4,7 @@ import { ref, onValue, query, limitToLast } from 'firebase/database';
 import { rtdb } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
-import { FiMessageCircle, FiHeart } from 'react-icons/fi';
+import { FiMessageCircle, FiHeart, FiUsers } from 'react-icons/fi';
 
 function Avatar({ user, size = 48 }) {
   if (user?.photoURL) return (
@@ -121,7 +121,8 @@ export default function Chat() {
     <div className="min-h-screen lg:ml-[260px]" style={{ background: '#fafafa', paddingBottom: 80 }}>
       <Navbar />
 
-      <div className="max-w-[630px] mx-auto px-4 py-5 lg:py-8">
+      <div className="max-w-[975px] mx-auto px-4 py-5 lg:py-8 lg:px-6 lg:flex lg:gap-8 lg:items-start">
+        <div className="flex-1 min-w-0">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
@@ -233,6 +234,33 @@ export default function Chat() {
           )}
 
         </div>
+
+        {/* Desktop right panel */}
+        <div className="hidden lg:block flex-shrink-0" style={{ width: 280, position: 'sticky', top: 24 }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #efefef', padding: '20px 16px' }}>
+            <p style={{ fontWeight: 700, fontSize: '0.88rem', color: '#111', marginBottom: 16 }}>เริ่มบทสนทนาใหม่</p>
+            <a href="/people"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+                background: 'linear-gradient(135deg,#f43f5e,#a855f7)', borderRadius: 12,
+                color: 'white', textDecoration: 'none', fontWeight: 700, fontSize: '0.88rem',
+              }}>
+              <FiUsers size={16} /> ค้นหาเพื่อน
+            </a>
+            {!hasPartner && (
+              <a href="/find-partner"
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', marginTop: 8,
+                  background: '#fff0f3', borderRadius: 12,
+                  color: '#e8637a', textDecoration: 'none', fontWeight: 700, fontSize: '0.88rem',
+                  border: '1px solid rgba(232,99,122,0.2)',
+                }}>
+                <FiHeart size={16} /> เชื่อมต่อคู่รัก
+              </a>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   );

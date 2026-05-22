@@ -4,7 +4,7 @@ import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/f
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
-import { FiSearch, FiUserPlus, FiUsers, FiCheck, FiX, FiMessageCircle, FiUserCheck } from 'react-icons/fi';
+import { FiSearch, FiUserPlus, FiUsers, FiCheck, FiX, FiMessageCircle, FiUserCheck, FiRss } from 'react-icons/fi';
 
 function Avatar({ user, size = 40 }) {
   if (user?.photoURL) return (
@@ -109,7 +109,8 @@ export default function People() {
   return (
     <div className="min-h-screen lg:ml-[260px]" style={{ background: '#fafafa', paddingBottom: 80 }}>
       <Navbar />
-      <div className="max-w-[630px] mx-auto px-4 py-5 lg:py-8">
+      <div className="max-w-[975px] mx-auto px-4 py-5 lg:py-8 lg:px-6 lg:flex lg:gap-8 lg:items-start">
+        <div className="flex-1 min-w-0 max-w-[630px]">
 
         {/* Header */}
         <div className="mb-4">
@@ -351,6 +352,24 @@ export default function People() {
             )}
           </div>
         )}
+
+        </div>
+
+        {/* Desktop right panel */}
+        <div className="hidden lg:block flex-shrink-0" style={{ width: 280, position: 'sticky', top: 24 }}>
+          <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #efefef', padding: '20px 16px' }}>
+            <p style={{ fontWeight: 700, fontSize: '0.92rem', color: '#111', marginBottom: 8 }}>แนะนำ</p>
+            <p style={{ fontSize: '0.82rem', color: '#8e8e8e', marginBottom: 16 }}>ค้นหาเพื่อนใหม่และแอดเพื่อนเพื่อเห็นโพสในฟีด</p>
+            <a href="/feed"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px',
+                background: 'linear-gradient(135deg,#f43f5e,#a855f7)', borderRadius: 12,
+                color: 'white', textDecoration: 'none', fontWeight: 700, fontSize: '0.88rem',
+              }}>
+              <FiRss size={16} /> ดูฟีด
+            </a>
+          </div>
+        </div>
 
       </div>
     </div>
