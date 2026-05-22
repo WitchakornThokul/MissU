@@ -7,6 +7,7 @@ import {
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
+import { useDialog } from '../components/Dialog';
 import { FiMessageCircle, FiArrowLeft, FiUserPlus, FiUserCheck, FiHeart, FiGrid, FiX } from 'react-icons/fi';
 
 function AvatarImg({ user, size = 40, ring = false }) {
@@ -108,6 +109,7 @@ function CommentSection({ postId, currentUser, userProfile }) {
 }
 
 function PostModal({ post, currentUser, userProfile, onClose }) {
+  const { deleteConfirm } = useDialog();
   const [liking, setLiking] = useState(false);
   const [showComments, setShowComments] = useState(true);
   const liked = post.likes?.includes(currentUser?.uid);
@@ -124,7 +126,8 @@ function PostModal({ post, currentUser, userProfile, onClose }) {
   }
 
   async function deletePost() {
-    if (!confirm('ลบโพสนี้?')) return;
+    const ok = await deleteConfirm('โพสนี้จะถูกลบถาวรและไม่สามารถกู้คืนได้');
+    if (!ok) return;
     await deleteDoc(doc(db, 'posts', post.id));
     onClose();
   }

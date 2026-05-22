@@ -4,6 +4,7 @@ import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/f
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
+import { useDialog } from '../components/Dialog';
 import { FiSearch, FiUserPlus, FiUsers, FiCheck, FiX, FiMessageCircle, FiUserCheck, FiRss } from 'react-icons/fi';
 
 function Avatar({ user, size = 40 }) {
@@ -21,6 +22,7 @@ function Avatar({ user, size = 40 }) {
 
 export default function People() {
   const { currentUser, sendFriendRequest, acceptFriendRequest, declineFriendRequest, removeFriend, getFriends, getFriendStatus, searchAllUsers } = useAuth();
+  const { deleteConfirm } = useDialog();
   const [tab, setTab] = useState('discover');
   const [search, setSearch] = useState('');
   const [results, setResults] = useState([]);
@@ -93,7 +95,8 @@ export default function People() {
   }
 
   async function handleRemoveFriend(uid) {
-    if (!confirm('ลบเพื่อนคนนี้?')) return;
+    const ok = await deleteConfirm('คุณต้องการลบเพื่อนคนนี้ออกจากรายชื่อ?', { confirmLabel: 'ลบเพื่อน' });
+    if (!ok) return;
     await removeFriend(uid);
     setFriends(prev => prev.filter(f => f.uid !== uid));
   }

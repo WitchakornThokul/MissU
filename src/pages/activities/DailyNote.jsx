@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import ModalPage from '../../components/ModalPage';
+import { useDialog } from '../../components/Dialog';
 import { collection, setDoc, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { FiEdit3, FiHeart, FiStar, FiSmile, FiSun, FiWind, FiMoon, FiSave, FiEdit } from 'react-icons/fi';
@@ -34,6 +35,7 @@ function MoodDisplay({ moodKey, size = 44 }) {
 
 export default function DailyNote() {
   const { currentUser, userProfile, partnerProfile, updateUserProfile } = useAuth();
+  const { alert } = useDialog();
   const coupleId = currentUser && userProfile?.partnerId
     ? [currentUser.uid, userProfile.partnerId].sort().join('_') : null;
 
@@ -96,7 +98,7 @@ export default function DailyNote() {
       }
     } catch (err) {
       console.error('Error saving note:', err);
-      alert('บันทึกไม่สำเร็จ: ' + err.message);
+      alert('บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', { title: 'เกิดข้อผิดพลาด' });
     } finally {
       setSaving(false);
     }

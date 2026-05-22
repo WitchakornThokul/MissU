@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { rtdb, db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { FiArrowLeft, FiSend, FiImage, FiHeart, FiMessageCircle } from 'react-icons/fi';
+import { useDialog } from '../components/Dialog';
 
 const MAX_MSG_LEN = 2000;
 
@@ -111,6 +112,7 @@ async function uploadToImgBB(file) {
 export default function FriendChat() {
   const { uid: friendUid } = useParams();
   const { currentUser, userProfile } = useAuth();
+  const { alert } = useDialog();
   const navigate = useNavigate();
   const [friendProfile, setFriendProfile] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -250,7 +252,7 @@ export default function FriendChat() {
         senderPhoto: userProfile.photoURL || null,
         timestamp: Date.now(), type: 'image',
       });
-    } catch (err) { alert('อัปโหลดรูปไม่สำเร็จ: ' + err.message); }
+    } catch (err) { alert('อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่', { title: 'เกิดข้อผิดพลาด' }); }
     finally {
       setUploadingImg(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

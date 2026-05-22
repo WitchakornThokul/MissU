@@ -8,6 +8,7 @@ import {
 import { db } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
+import { useDialog } from '../components/Dialog';
 import { FiHeart, FiMessageCircle, FiImage, FiSend, FiEdit3 } from 'react-icons/fi';
 
 /* ── Story-ring avatar ── */
@@ -116,6 +117,7 @@ function CommentSection({ postId, currentUser, userProfile }) {
 
 /* ── IG-style Post Card ── */
 function PostCard({ post, currentUser, userProfile }) {
+  const { deleteConfirm } = useDialog();
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [liking, setLiking] = useState(false);
@@ -138,7 +140,8 @@ function PostCard({ post, currentUser, userProfile }) {
   }
 
   async function deletePost() {
-    if (!confirm('ลบโพสนี้?')) return;
+    const ok = await deleteConfirm('โพสนี้จะถูกลบถาวรและไม่สามารถกู้คืนได้');
+    if (!ok) return;
     await deleteDoc(doc(db, 'posts', post.id));
   }
 
@@ -223,6 +226,7 @@ function PostCard({ post, currentUser, userProfile }) {
 
 /* ── Create Post ── */
 function CreatePostBox({ currentUser, userProfile }) {
+  const { alert } = useDialog();
   const [text, setNewText] = useState('');
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -282,7 +286,7 @@ function CreatePostBox({ currentUser, userProfile }) {
       setPreview(null);
       setFocused(false);
     } catch (err) {
-      alert('โพสไม่สำเร็จ: ' + err.message);
+      alert('โพสไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', { title: 'เกิดข้อผิดพลาด' });
     }
     setPosting(false);
   }

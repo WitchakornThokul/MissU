@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import ModalPage from '../../components/ModalPage';
+import { useDialog } from '../../components/Dialog';
 import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
@@ -64,6 +65,7 @@ const QUESTION_SETS = [
 
 export default function LoveQuiz() {
   const { currentUser, userProfile } = useAuth();
+  const { alert } = useDialog();
   const coupleId = currentUser && userProfile?.partnerId
     ? [currentUser.uid, userProfile.partnerId].sort().join('_') : null;
 
@@ -93,8 +95,8 @@ export default function LoveQuiz() {
     setMode('answer'); setCurrent(0); setAnswers([]); setSelected(null);
   }
 
-  function startQuiz() {
-    if (!partnerData) { alert('ยังไม่มีคำตอบจากคู่รัก รอให้คู่รักตอบก่อนนะ'); return; }
+  async function startQuiz() {
+    if (!partnerData) { await alert('รอให้คู่รักตอบคำถามก่อน แล้วค่อยกดทดสอบ', { title: 'ยังไม่มีคำตอบจากคู่รัก', type: 'info' }); return; }
     setSetIndex(partnerData.setIndex ?? 0);
     setMode('quiz'); setCurrent(0); setAnswers([]); setSelected(null);
   }

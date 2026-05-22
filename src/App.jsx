@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { DialogProvider } from './components/Dialog';
 import ProtectedRoute from './components/ProtectedRoute';
 import BottomNav from './components/BottomNav';
 import DesktopSidebar from './components/DesktopSidebar';
@@ -59,6 +60,7 @@ function AuthenticatedDesktopSidebar() {
 function App() {
   return (
     <AuthProvider>
+      <DialogProvider>
       <BrowserRouter>
         <AuthenticatedDesktopSidebar/>
         <Routes>
@@ -77,6 +79,7 @@ function App() {
         </Routes>
         <AuthenticatedBottomNav/>
       </BrowserRouter>
+      </DialogProvider>
     </AuthProvider>
   );
 }

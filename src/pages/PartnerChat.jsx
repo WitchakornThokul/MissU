@@ -4,6 +4,7 @@ import { ref, push, onValue, query, limitToLast, set, onDisconnect } from 'fireb
 import { rtdb } from '../firebase/config';
 import { useAuth } from '../contexts/AuthContext';
 import { FiArrowLeft, FiSend, FiImage, FiHeart, FiMessageCircle } from 'react-icons/fi';
+import { useDialog } from '../components/Dialog';
 
 // Removed IMGBB_KEY - now using /api/upload endpoint
 const MAX_MSG_LEN = 2000;
@@ -145,6 +146,7 @@ async function uploadToImgBB(file) {
 
 export default function Chat() {
   const { currentUser, userProfile, partnerProfile } = useAuth();
+  const { alert } = useDialog();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -293,7 +295,7 @@ export default function Chat() {
         senderPhoto: userProfile.photoURL || null,
         timestamp: Date.now(), type: 'image',
       });
-    } catch (err) { alert('อัปโหลดรูปไม่สำเร็จ: ' + err.message); }
+    } catch (err) { alert('อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่', { title: 'เกิดข้อผิดพลาด' }); }
     finally {
       setUploadingImg(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

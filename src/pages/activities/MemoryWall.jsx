@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import ModalPage from '../../components/ModalPage';
+import { useDialog } from '../../components/Dialog';
 import { collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import BottomSheet from '../../components/BottomSheet';
@@ -74,6 +75,7 @@ async function uploadToImgBB(file) {
 
 /* ── Memory Detail Modal ── */
 function MemoryDetailModal({ memory, onClose, coupleId, currentUser, userProfile, onViewImage }) {
+  const { alert } = useDialog();
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [sending, setSending] = useState(false);
@@ -123,7 +125,7 @@ function MemoryDetailModal({ memory, onClose, coupleId, currentUser, userProfile
       });
       setNewComment('');
     } catch (err) {
-      alert('ส่งความคิดเห็นไม่สำเร็จ: ' + err.message);
+      alert('ส่งความคิดเห็นไม่สำเร็จ กรุณาลองใหม่', { title: 'เกิดข้อผิดพลาด' });
     } finally {
       setSending(false);
     }
@@ -247,6 +249,7 @@ function MemoryDetailModal({ memory, onClose, coupleId, currentUser, userProfile
 
 export default function MemoryWall() {
   const { currentUser, userProfile, partnerProfile } = useAuth();
+  const { alert } = useDialog();
   const coupleId = currentUser && userProfile?.partnerId
     ? [currentUser.uid, userProfile.partnerId].sort().join('_') : null;
 
@@ -310,7 +313,7 @@ export default function MemoryWall() {
       clearImage();
       setShowForm(false);
     } catch (err) {
-      alert('อัปโหลดไม่สำเร็จ: ' + err.message);
+      alert('อัปโหลดไม่สำเร็จ กรุณาลองใหม่', { title: 'เกิดข้อผิดพลาด' });
     } finally {
       setUploading(false);
     }
