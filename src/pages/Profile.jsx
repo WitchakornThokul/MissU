@@ -245,7 +245,7 @@ export default function Profile() {
   const hasPartner = !!userProfile?.partnerId && days !== null && days >= 0;
 
   return (
-    <div className="lg:ml-[260px]" style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: 80 }}>
+    <div style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: 80 }}>
 
       {/* IG profile header */}
       <div style={{ background: '#fff', borderBottom: '1px solid #dbdbdb' }}>

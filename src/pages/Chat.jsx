@@ -118,7 +118,7 @@ export default function Chat() {
   }, [currentUser, friends, userProfile?.partnerId]);
 
   return (
-    <div className="min-h-screen lg:ml-[260px]" style={{ background: '#fafafa', paddingBottom: 80 }}>
+    <div className="min-h-screen" style={{ background: '#fafafa', paddingBottom: 80 }}>
       <Navbar />
 
       <div className="max-w-[860px] px-4 py-5 lg:py-8 lg:px-6">

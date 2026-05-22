@@ -106,7 +106,7 @@ export default function FindPartner() {
   // ── Already has partner ───────────────────────────────────────
   if (userProfile?.partnerId) {
     return (
-      <div className="min-h-screen lg:ml-[260px]" style={{background:'#f8f5f7'}}>
+      <div className="min-h-screen" style={{background:'#f8f5f7'}}>
         <Navbar/>
         {toast && (
           <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-2xl text-sm font-semibold text-white shadow-lg animate-fade-up"

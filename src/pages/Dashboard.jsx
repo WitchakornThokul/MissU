@@ -211,7 +211,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen lg:ml-[260px]" style={{background:'#fafafa', paddingBottom: 80}}>
+    <div className="min-h-screen" style={{background:'#fafafa', paddingBottom: 80}}>
       <Navbar/>
 
       {/* Mobile-only sticky top bar */}

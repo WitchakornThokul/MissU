@@ -57,27 +57,40 @@ function AuthenticatedDesktopSidebar() {
   return <DesktopSidebar/>;
 }
 
+function MainWrapper({ children }) {
+  const { currentUser } = useAuth();
+  const location = useLocation();
+  const hasSidebar = currentUser && location.pathname !== '/';
+  return (
+    <div className={hasSidebar ? 'lg:ml-[260px]' : ''}>
+      {children}
+    </div>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
       <DialogProvider>
       <BrowserRouter>
         <AuthenticatedDesktopSidebar/>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/dashboard"    element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/profile"      element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/chat"         element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-          <Route path="/chat/partner" element={<ProtectedRoute><PartnerChat /></ProtectedRoute>} />
-          <Route path="/find-partner" element={<ProtectedRoute><FindPartner /></ProtectedRoute>} />
-          <Route path="/activity/:id" element={<ProtectedRoute><ActivityWrapper /></ProtectedRoute>} />
-          <Route path="/profile/:uid"  element={<ProtectedRoute><ViewProfile /></ProtectedRoute>} />
-          <Route path="/people"       element={<ProtectedRoute><People /></ProtectedRoute>} />
-          <Route path="/feed"         element={<ProtectedRoute><Feed /></ProtectedRoute>} />
-          <Route path="/messages/:uid" element={<ProtectedRoute><FriendChat /></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-        <AuthenticatedBottomNav/>
+        <MainWrapper>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/dashboard"    element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/profile"      element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/chat"         element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+            <Route path="/chat/partner" element={<ProtectedRoute><PartnerChat /></ProtectedRoute>} />
+            <Route path="/find-partner" element={<ProtectedRoute><FindPartner /></ProtectedRoute>} />
+            <Route path="/activity/:id" element={<ProtectedRoute><ActivityWrapper /></ProtectedRoute>} />
+            <Route path="/profile/:uid"  element={<ProtectedRoute><ViewProfile /></ProtectedRoute>} />
+            <Route path="/people"       element={<ProtectedRoute><People /></ProtectedRoute>} />
+            <Route path="/feed"         element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+            <Route path="/messages/:uid" element={<ProtectedRoute><FriendChat /></ProtectedRoute>} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+          <AuthenticatedBottomNav/>
+        </MainWrapper>
       </BrowserRouter>
       </DialogProvider>
     </AuthProvider>

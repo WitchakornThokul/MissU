@@ -227,7 +227,7 @@ export default function ViewProfile() {
   }
 
   return (
-    <div className="lg:ml-[260px]" style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: 80 }}>
+    <div style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: 80 }}>
       <Navbar />
 
       {loading ? (
