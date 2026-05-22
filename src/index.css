@@ -14,6 +14,16 @@ body {
 }
 #root { min-height: 100vh; }
 
+/* ── Sidebar offset for desktop ── */
+@media (min-width: 1024px) {
+  .sidebar-offset {
+    margin-left: 260px;
+  }
+  .chat-fixed-container {
+    left: 260px !important;
+  }
+}
+
 /* ── Safe spacing for bottom navigation ── */
 @media (max-width: 767px) {
   .page-with-nav {

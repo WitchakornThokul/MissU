@@ -279,7 +279,7 @@ export default function FriendChat() {
   });
 
   return (
-    <div className="lg:left-[260px]" style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#fff', overflow: 'hidden' }}>
+    <div className="chat-fixed-container" style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#fff', overflow: 'hidden' }}>
 
       {/* Header */}
       <div style={{

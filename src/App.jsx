@@ -62,7 +62,7 @@ function MainWrapper({ children }) {
   const location = useLocation();
   const hasSidebar = currentUser && location.pathname !== '/';
   return (
-    <div className={hasSidebar ? 'lg:ml-[260px]' : ''}>
+    <div className={hasSidebar ? 'sidebar-offset' : ''}>
       {children}
     </div>
   );
