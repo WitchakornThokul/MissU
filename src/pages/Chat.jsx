@@ -234,6 +234,7 @@ export default function Chat() {
           )}
 
         </div>
+        </div>
 
         {/* Desktop right panel */}
         <div className="hidden lg:block flex-shrink-0" style={{ width: 280, position: 'sticky', top: 24 }}>
