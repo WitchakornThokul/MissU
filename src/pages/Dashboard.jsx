@@ -230,10 +230,10 @@ export default function Dashboard() {
       </div>
 
       {/* ── Main layout ── */}
-      <div className="max-w-[1100px] mx-auto px-4 pt-5 pb-20 md:pb-12 lg:pt-8 lg:flex lg:gap-8 lg:items-start">
+      <div className="max-w-[1100px] mx-auto px-4 pt-5 pb-20 md:pb-12 lg:pt-8">
 
-        {/* Main content — left */}
-        <div className="flex-1 min-w-0">
+        {/* Main content */}
+        <div>
 
           {/* ── Mobile: couple header ── */}
           <div className="md:hidden">
@@ -358,15 +358,6 @@ export default function Dashboard() {
 
         </div>
 
-        {/* Desktop right panel — couple info */}
-        <CoupleSidebar
-          userProfile={userProfile}
-          partnerProfile={partnerProfile}
-          isLocal={isLocal}
-          days={days}
-          quote={QUOTES[quoteIdx]}
-          quoteFade={quoteFade}
-        />
 
       </div>
     </div>

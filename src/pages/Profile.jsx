@@ -246,7 +246,6 @@ export default function Profile() {
 
   return (
     <div className="lg:ml-[260px]" style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: 80 }}>
-      <Navbar />
 
       {/* IG profile header */}
       <div style={{ background: '#fff', borderBottom: '1px solid #dbdbdb' }}>
