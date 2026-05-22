@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from '
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import BottomNav from './components/BottomNav';
+import DesktopSidebar from './components/DesktopSidebar';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import ViewProfile from './pages/ViewProfile';
@@ -47,10 +48,19 @@ function AuthenticatedBottomNav() {
   return <BottomNav/>;
 }
 
+function AuthenticatedDesktopSidebar() {
+  const { currentUser } = useAuth();
+  const location = useLocation();
+  const hide = !currentUser || location.pathname === '/';
+  if (hide) return null;
+  return <DesktopSidebar/>;
+}
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <AuthenticatedDesktopSidebar/>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/dashboard"    element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

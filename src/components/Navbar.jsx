@@ -37,8 +37,8 @@ export default function Navbar() {
   ];
 
   return (
-    /* Desktop only — mobile uses BottomNav */
-    <nav className="glass-white sticky top-0 z-50 hidden md:block">
+    /* Hide on desktop (using sidebar) — show on tablet only */
+    <nav className="glass-white sticky top-0 z-50 hidden md:block lg:hidden">
       <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
 
         <Link to="/dashboard" className="hover:opacity-90 transition-opacity">

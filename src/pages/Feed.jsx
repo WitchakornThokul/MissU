@@ -389,7 +389,7 @@ export default function Feed() {
   }, [currentUser, friendUids]);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: 80 }}>
+    <div className="lg:ml-[260px]" style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: 80 }}>
       <Navbar />
 
       {/* Mobile top bar */}
@@ -399,7 +399,7 @@ export default function Feed() {
         <FiEdit3 size={22} color="#111" strokeWidth={1.8} />
       </div>
 
-      <div style={{ maxWidth: 600, margin: '0 auto' }}>
+      <div style={{ maxWidth: 630, margin: '0 auto' }}>
 
         {/* Create Post */}
         {userProfile && (

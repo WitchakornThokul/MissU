@@ -211,7 +211,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen" style={{background:'#fafafa', paddingBottom: 80}}>
+    <div className="min-h-screen lg:ml-[260px]" style={{background:'#fafafa', paddingBottom: 80}}>
       <Navbar/>
 
       {/* Mobile-only sticky top bar */}
@@ -230,7 +230,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Main layout ── */}
-      <div className="max-w-6xl mx-auto px-4 pt-5 pb-20 md:pb-12 md:flex md:gap-8">
+      <div className="max-w-6xl mx-auto px-4 pt-5 pb-20 md:pb-12 md:flex md:gap-8 lg:pt-8">
 
         {/* Desktop sidebar */}
         <CoupleSidebar
