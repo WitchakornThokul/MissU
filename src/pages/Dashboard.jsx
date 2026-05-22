@@ -230,7 +230,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Main layout ── */}
-      <div className="max-w-[1100px] mx-auto px-4 pt-5 pb-20 md:pb-12 lg:pt-8">
+      <div className="max-w-[1100px] px-4 pt-5 pb-20 md:pb-12 lg:pt-8">
 
         {/* Main content */}
         <div>
